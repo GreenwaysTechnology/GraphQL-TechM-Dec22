@@ -1,0 +1,171 @@
+			    GraphQL on node.js using Apollo server
+
+Tech Stack:
+1.node.js - Platform and runtime
+2.Apollo server - Runtime for graphQL apps.
+3.Typescript - language for writing apps -  wrapper on javascript
+...................................................................................
+				Typescript
+
+What is typescript?
+  Ts is programming language created on top of ECMA 6 standards
+
+Why type script?
+   Javascript is dynamic typed,object based,functional programming language.
+
+Dynamic typed means the type of variable not identifed/verified during compile time.
+
+if you want to build enterprise grade apps, we need strong typing...
+
+index.js-source code
+  |
+ feed into host(browser/node)
+  |
+  parser
+    |
+   will translate the code into plain text(lexical structure)
+    |
+    compiler
+     |
+     byte code(assembly)
+     |
+ -----------
+   Runtime
+     byte code - interpreter---JIT --Native calls --output
+  
+....................................................................................
+		What if i want to build object oriented system using js?
+
+=>2010 the community project(coffee script) started by introducing classes inside js
+  -classes,interfaces,modules.....
+  dev code would be coffeescript , but production code would be js.
+  hello.coffee
+     ->compiler---hello.js
+
+ Still coffee script not type safe(no strong typing)
+
+=>2011 the Microsoft started the project called "Oo js" using C#.
+  class,interfaces,modules,strong typing...
+  hello.cs ---->hello.js
+ 
+  2012 -ECMA Commttee introduced ES 6 - class,let,const...... 
+ 
+  2012- MS rewritten the oo js project on the top of es 6 -  Typescript
+
+  TS => { js features(es 6,es 5} + strong typing(data types),extra features }
+
+  hello.ts ---> hello.js
+
+Today ts is one of defacto standard for building oo and strongly typed js apps.
+....................................................................................
+				Type script setup and features
+
+
+1.type system
+2.classes
+3.functions
+4.decorators
+
+
+Project setup:
+E:\session\TechMahendra>mkdir mytsapp
+
+E:\session\TechMahendra>cd mytsapp
+
+E:\session\TechMahendra\mytsapp>npm init --yes
+Wrote to E:\session\TechMahendra\mytsapp\package.json:
+
+E:\session\TechMahendra>mkdir mytsapp
+
+E:\session\TechMahendra>cd mytsapp
+
+E:\session\TechMahendra\mytsapp>npm init --yes
+Wrote to E:\session\TechMahendra\mytsapp\package.json:
+
+{
+  "name": "mytsapp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
+....
+E:\session\TechMahendra\mytsapp>mkdir src
+
+E:\session\TechMahendra\mytsapp>npm  install typescript --save-dev
+
+added 1 package, and audited 2 packages in 3s
+
+found 0 vulnerabilities
+
+E:\session\TechMahendra\mytsapp>code .
+
+tsconfig.json
+{
+    "compilerOptions": {
+        "outDir": "build",
+        "watch": true,
+        "noEmitOnError": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+
+    },
+    "exclude": [
+        "node_modules"
+    ],
+    "files": [
+        "src/index.ts"
+    ]
+}
+
+configuration:
+package.json
+"scripts": {
+    "compile" : "tsc"
+  }
+
+>npm run compile
+
+>open another cmd
+
+>"scripts": {
+    "compile" : "tsc"
+  }
+E:\session\TechMahendra\mytsapp>node build/index.js
+Hello Typescript!!
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+

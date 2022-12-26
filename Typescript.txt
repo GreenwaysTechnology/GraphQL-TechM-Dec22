@@ -139,6 +139,170 @@ package.json
 E:\session\TechMahendra\mytsapp>node build/index.js
 Hello Typescript!!
 
+....................................................................................
+
+Note: our app is based on pure es 6 standards not on es 5 
+
+Language fundamentals:
+
+1.variable declarations
+
+  var | let | const | this variableName=value(literals)
+  
+var- es 5 keyword : we dont use to declare variables
+let and const -es 6 keyword
+
+types of literals
+
+1.string
+2.number
+3.boolean
+4.undefined
+5.NaN
+6.infinity
+7.function
+8.null
+9.object
+
+2.data types
+ Typescript offers data types based on built in values(literals)
+
+classification:
+1.primitives
+   number,string,boolean
+number -
+   numbers,NaN,infinity
+strings
+   "" ,'' ,``(back tick)
+booleans
+  true 
+  false
+2.reference types
+   any object types
+   array 
+3.other types
+  any
+  void
+  union
+  
+Types and variables:
+//variable declarations with type
+let firstName: string = "Subramanian"
+console.log("first Name " + firstName)
+console.log('First Name' + firstName)
+//es 6 template literal: interploation
+console.log(`First Name ${firstName}`)
+//verify the type safty
+//firstName =90 // error TS2322: Type 'number' is not assignable to type 'string'.
+firstName = "Ram"
+
+//another syntax to declare variables : Type inference
+//here there is no explicit, the variable type is understood, based on value
+let lastName = "Murugan"
+console.log(`last Name ${lastName}`)
+// lastName =90
+
+//numbers
+let age: number = 42
+console.log(`Age ${age}`)
+
+//booleans
+let active: boolean = true
+console.log(`Status ${active}`)
+
+//undefined : implicit undefined
+let salary;
+console.log(`salary ${salary}`)
+salary = 100;
+console.log(`salary ${salary}`)
+salary ="1000"
+
+//any : instead of declaraing undefined it is recommended to use any.
+//any means i dont know the type of variable at present
+//any means i dont want any specific type for the variable.
+let somevar:any 
+console.log(`SomeVar ${somevar}`)
+somevar =10
+console.log(`SomeVar ${somevar}`)
+somevar =true
+console.log(`SomeVar ${somevar}`)
+
+//NaN -  Not a Number : it is runtime error code, which is thrown during runtime if computation fails
+
+let a  //undefined
+let b =10; // number
+
+// c  = undefined * number => NaN
+let c = a * b 
+console.log(`c ${c}`)
+
+//infinity
+let d = 10/0
+console.log(`d ${d}`)
+................................................................................
+				 const and let vs const
+.................................................................................
+
+let is reassignable
+const is readonly
+//let vs const 
+let a = 10;
+console.log(`a ${a}`)
+a = 90
+console.log(`a ${a}`)
+
+const b = 90;
+console.log(`b ${b}`)
+b=900;
+console.log(`b ${b}`)
+.....................................................................................
+				 function
+....................................................................................
+//functions
+//es 6 default args
+function calculate(a: number = 0, b: number = 0): number {
+    return a + b
+}
+console.log(calculate(10, 10))
+// console.log(calculate()) //error no arg is passed
+// console.log(calculate("10","10"))
+console.log(calculate())
+
+//void 
+function doStuff(): void {
+    return
+}
+//ts optional parameters
+function fetchData(url?: string, method?: string): void {
+    console.log(url, method)
+}
+fetchData("/api/users", "GET")
+fetchData()
+
+//union types
+//value must be "Male" or "Female" | "Third"
+function fetchUsers(gender: "Male" | "Female" | "Third" = "Male", id?: string | number) {
+    console.log(id, gender)
+}
+fetchUsers("Male")
+fetchUsers("Female", 92)
+fetchUsers("Male", 122)
+//fetchUsers("xxx")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

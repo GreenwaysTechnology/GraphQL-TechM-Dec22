@@ -288,6 +288,269 @@ fetchUsers("Male")
 fetchUsers("Female", 92)
 fetchUsers("Male", 122)
 //fetchUsers("xxx")
+.....................................................................................
+				oo implementation
+.....................................................................................
+
+
+class Customer {
+    //instance variables
+    id: number
+    firstName: string
+    lastName: string
+    constructor(id: number = 1, firstName: string = "", lastName: string = "") {
+        this.id = id
+        this.firstName = firstName
+        this.lastName = lastName
+    }
+}
+function main() {
+    let customer = null;
+    customer = new Customer()
+    customer.id = 1
+    customer.firstName = 'Subramanian'
+    customer.lastName = 'Murugan'
+    console.log(`Id ${customer.id} name ${customer.firstName} ${customer.lastName}`)
+
+    //data can be passed during constructor call
+    customer = new Customer(12,'karthik','Subramanian')
+    console.log(`Id ${customer.id} name ${customer.firstName} ${customer.lastName}`)
+
+
+}
+main()
+
+methods;
+
+class CustomerRepository {
+    constructor() { }
+    //methods
+    findAll() {
+        return ['customers']
+    }
+    save() {
+        return 'save'
+    }
+    remove() {
+        return 'remove'
+    }
+}
+function main() {
+    let customerReposistory = new CustomerRepository()
+    console.log(customerReposistory.findAll())
+    console.log(customerReposistory.save())
+    console.log(customerReposistory.remove())
+
+}
+main()
+...................................................................................
+			  Encaspulation
+
+How to share code (methods and variables)
+
+modifiers: private,public,protected
+
+by default all instance variables and methods are public
+
+
+//private,public 
+
+
+class Customer {
+    //instance variables
+    public id: number
+    public firstName: string
+    public lastName: string
+    constructor(id: number = 1, firstName: string = "", lastName: string = "") {
+        this.id = id
+        this.firstName = firstName
+        this.lastName = lastName
+    }
+
+}
+class CustomerRepository {
+    constructor() { }
+    //methods
+    public findAll() {
+        return ['customers']
+    }
+    public save() {
+        return 'save'
+    }
+    public remove() {
+        return 'remove'
+    }
+}
+
+class User {
+    private userName: string
+    private password: string
+}
+
+function main(){
+  let user = new User()
+ // user.userName = ''
+}
+main()
+.....................................................................................					Dependency Injection -Has A
+................................................................................
+
+
+class Address {
+    public city: string
+    constructor(city: string = "Coimbatore") {
+        this.city = city
+    }
+}
+
+class Customer {
+    public id: number
+    public firstName: string
+    public lastName: string
+    //has a 
+    public address: Address
+    constructor(id: number = 1, firstName: string = "", lastName: string = "", address: Address = new Address()) {
+        this.id = id
+        this.firstName = firstName
+        this.lastName = lastName
+        this.address = address
+    }
+}
+function main(){
+    let cust = new Customer()
+    console.log(cust)
+}
+main()
+.................................................................................
+			How to reduce code with public,private and DI
+
+
+class Address {
+    constructor(public city: string = "Coimbatore") { }
+}
+
+class Customer {
+    constructor(public id: number = 1, public firstName: string = "", public lastName: string = "", public address: Address = new Address()) { }
+}
+function main() {
+    let cust = new Customer()
+    console.log(cust)
+}
+main()
+...................................................................................
+			 inheritance
+
+
+1.class based
+2.interface based
+3.abstract class
+
+//class based
+
+abstract class Account {
+    constructor() {
+        console.log('Account class')
+    }
+    updateProfile() {
+        return 'update profile'
+    }
+    abstract changePassword()
+}
+//interfaces
+interface Deposit {
+    deposit(): number
+}
+
+class SavingsAccount extends Account implements Deposit {
+    constructor() {
+        super()
+        console.log('SavingsAccount class')
+    }
+    deposit(): number {
+        return 100
+    }
+    changePassword() {
+        return 'password'
+    }
+}
+function main() {
+    let acc = new SavingsAccount()
+    console.log(acc.deposit())
+    console.log(acc.updateProfile())
+}
+main()
+....................................................................................
+			Reference Types and Generices
+....................................................................................
+
+Objects:
+ 1.Using constructors - classes, and functions
+ 2.literal patterns -  hold data
+
+Object types:
+defined for literal patterns
+
+1.class as type
+2.interface as type
+3.type keyword
+
+
+
+//customer type 
+// class Customer {
+//     id: number
+//     name: string
+//     city?:string  //optional field
+// }
+
+//interface as Type
+// interface Customer {
+//     id: number
+//     name: string
+//     city?:string  //optional field
+// }
+
+//type keyword
+type Customer = {
+    id: number
+    name: string
+    city?: string  //optional field
+    gender?: "Male" | "Female" | "Third"
+}
+
+let customer: Customer = {
+    id: 1,
+    name: 'Subramanian',
+    city: 'Coimbatore',
+    gender: "Male"
+}
+
+let customer1: Customer = {
+    id: 1,
+    name: 'Subramanian'
+}
+///Arrays : collection of values
+//generics
+
+let customers: Array<Customer> = [
+    {
+        id: 1,
+        name: 'Subramanian',
+        gender: "Male"
+    }
+]
+Built in Generic types : Array,Promises
+.....................................................................................
+				Module Patterns
+.....................................................................................
+
+
+
+
+
+
+
+
 
 
 

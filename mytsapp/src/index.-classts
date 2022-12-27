@@ -1,0 +1,27 @@
+
+class Customer {
+    //instance variables
+    id: number
+    firstName: string
+    lastName: string
+    constructor(id: number = 1, firstName: string = "", lastName: string = "") {
+        this.id = id
+        this.firstName = firstName
+        this.lastName = lastName
+    }
+}
+function main() {
+    let customer = null;
+    customer = new Customer()
+    customer.id = 1
+    customer.firstName = 'Subramanian'
+    customer.lastName = 'Murugan'
+    console.log(`Id ${customer.id} name ${customer.firstName} ${customer.lastName}`)
+
+    //data can be passed during constructor call
+    customer = new Customer(12,'karthik','Subramanian')
+    console.log(`Id ${customer.id} name ${customer.firstName} ${customer.lastName}`)
+
+
+}
+main()

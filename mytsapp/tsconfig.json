@@ -2,6 +2,7 @@
     "compilerOptions": {
         "outDir": "build",
         "watch": true,
+        "target": "ES6",
         "noEmitOnError": true,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,

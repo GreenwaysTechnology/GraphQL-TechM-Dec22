@@ -14,7 +14,6 @@ const typeDefs = `
   #Query for User
   type Query {
     users:[User]
-    user(id:ID!):User
   }
 
 `
@@ -74,14 +73,7 @@ const resolvers = {
     //Query
     Query: {
         users() {
-            return USERS
-        },
-        user(_, args) {
-            const { id } = args; //destructure args object:Extract id field
-            //biz logic
-            return USERS.find(user => {
-                return user.id === +id
-            })
+            return USERS 
         }
     }
 }

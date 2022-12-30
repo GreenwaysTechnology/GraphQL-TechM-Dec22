@@ -1,0 +1,1276 @@
+			   GraphQL 
+
+What is GraphQL?
+	GraphQL is a new API standard that provides a more efficient, powerful and flexible alternative to REST.
+
+APIs have become ubiquitous components of software infrastructures. In short, an API defines how a client can load data from a server.
+
+At its core, GraphQL enables declarative data fetching where a client can specify exactly what data it needs from an API. Instead of multiple endpoints that return fixed data structures, a GraphQL server only exposes a single endpoint and responds with precisely the data a client asked for.
+
+GraphQL - A Query Language for APIs
+Most applications today have the need to fetch data from a server where that data is stored in a database. It’s the responsibility of the API to provide an interface to the stored data that fits an application’s needs.
+
+GraphQL is often confused with being a database technology. This is a misconception, GraphQL is a query language for APIs - not databases. In that sense it’s database agnostic and effectively can be used in any context where an API is used.
+
+
+A more efficient Alternative to REST
+....................................
+
+REST has been a popular way to expose data from a server. When the concept of REST was developed, client applications were relatively simple and the development pace wasn’t nearly where it is today. REST thus was a good fit for many applications. However, the API landscape has radically changed over the last couple of years. In particular, there are three factors that have been challenging the way APIs are designed:
+
+1. Increased mobile usage creates need for efficient data loading
+Increased mobile usage, low-powered devices and sloppy networks were the initial reasons why Facebook developed GraphQL. GraphQL minimizes the amount of data that needs to be transferred over the network and thus majorly improves applications operating under these conditions.
+
+2. Variety of different frontend frameworks and platforms
+The heterogeneous landscape of frontend frameworks and platforms that run client applications makes it difficult to build and maintain one API that would fit the requirements of all. With GraphQL, each client can access precisely the data it needs.
+
+3. Fast development & expectation for rapid feature development
+Continuous deployment has become a standard for many companies, rapid iterations and frequent product updates are indispensable. With REST APIs, the way data is exposed by the server often needs to be modified to account for specific requirements and design changes on the client-side. This hinders fast development practices and product iterations.
+
+1. Increased mobile usage creates need for efficient data loading
+Increased mobile usage, low-powered devices and sloppy networks were the initial reasons why Facebook developed GraphQL. GraphQL minimizes the amount of data that needs to be transferred over the network and thus majorly improves applications operating under these conditions.
+
+2. Variety of different frontend frameworks and platforms
+The heterogeneous landscape of frontend frameworks and platforms that run client applications makes it difficult to build and maintain one API that would fit the requirements of all. With GraphQL, each client can access precisely the data it needs.
+
+3. Fast development & expectation for rapid feature development
+Continuous deployment has become a standard for many companies, rapid iterations and frequent product updates are indispensable. With REST APIs, the way data is exposed by the server often needs to be modified to account for specific requirements and design changes on the client-side. This hinders fast development practices and product iterations.
+
+..............................................................................................
+				   GraphQL CORE Spec
+..............................................................................................
+
+There are two actors in GraphQL:
+
+1.GraphQL Service Provider  - server side apps
+2.GraphQL Consumer/Clients-  Can be mobile apps,Browser apps(react,angular),testing clients
+
+GraphQL provides two sub set language:
+
+1.GraphQL Query Language  - client side
+2.GraphQL Schema Language - Server side
+
+
+..............................................................................................
+			  GraphQL request and response model.
+
+
+Declarative Programming:
+
+What you write, you have to get the same structure.
+
+The Query request is more readable,declarative. WHich micics the javascript object literal syntax.
+
+js object:
+
+ let user =  {
+     id:1,
+     name:'joe'
+     friends: [
+        'bar','foo'
+     ]
+  } 
+
+GraphQL Request payload : GraphQL Query
+.......................................
+
+GraphQL Client 
+POST /endpoint
+
+  {
+     id
+     name
+     friends { -----------------------------> GraphQLServer
+        name
+     }
+  } 
+
+Response:JSON
+ {
+     "id":1,
+     "name":"joe"
+     "friends": [      <----------------------------- GraphQLServer
+        "bar","foo"
+     ]
+  } 
+
+..............................................................................................
+				 REST AND CURD
+
+Operations Type
+
+GET ------Read
+POST -----CREATE
+PUT ------UPDATE
+DELETE----Remove
+.............................................................................................
+				GRAPHQL And CURD
+
+
+GraphQL uses only URL which exposes Service
+
+
+  {
+     id
+     name
+     friends { -----------HTTP POST------------------> GraphQLServer
+        name
+     }
+  } 
+
+Operation Types:
+
+1.Query
+  read
+2.mutation
+  create,update,delete
+3.subscription
+   Streaming
+
+query - a read only fetch
+mutation- a write followed by read
+subscription- a long live request that fetches data in response to source events
+.....................................................................................
+				Schema Query Language -spec
+....................................................................................
+
+1.selection set
+
+ selectionSet : { Selection }
+
+selectionSet could be "query,mutation,subscription"
+
+Selection:
+ -fields
+ -Fragement Spread
+ -lnline fragement.
+
+fields:
+query { 
+   person {
+    firstname
+    lastname
+   }
+}
+
+Selection set to be selected by somebody(Operation)
+
+An Operation selects the set of information it needs, exactly will receive that information
+
+Operation and Selection Set
+
+query {
+ firstname
+  lastname
+  age
+}
+mutation createUser(params){
+  user
+}
+subscription getPriceQuote(params) {
+ price
+ name
+}
+..................
+
+Demo graphql end points:
+.........................
+https://www.graphqlbin.com/v2/new
+url:
+https://countries.trevorblades.com/
+
+
+Fields: 
+........
+At its simplest, GraphQL is about asking for specific fields on objects. 
+Let's start by looking at a very simple query and the result we get when we run it:
+
+Are properties of an object.
+
+eg:
+
+query {
+   countries {
+     name
+  }
+}
+
+short cut:
+{
+   countries {
+     name
+  }
+}
+
+Response:
+{
+  "data": {
+    "countries": [
+      {
+        "name": "Andorra"
+      },
+      {
+        "name": "United Arab Emirates"
+      },
+      {
+        "name": "Afghanistan"
+      }
+}
+...
+More fields:
+ How do we know that the api has more fields?
+ In the playground , we can see docs.by looking docs we can come to know the fields
+
+{
+  countries {
+    code
+    name
+    native
+    capital
+    currency
+  }
+}
+
+Response
+{
+  "data": {
+    "countries": [
+      {
+        "code": "AD",
+        "name": "Andorra",
+        "native": "Andorra",
+        "capital": "Andorra la Vella",
+        "currency": "EUR"
+      },
+      {
+        "code": "AE",
+        "name": "United Arab Emirates",
+        "native": "دولة الإمارات العربية المتحدة",
+        "capital": "Abu Dhabi",
+        "currency": "AED"
+      },
+}
+...
+
+How to query nested values?
+{
+  countries {
+    code
+    name
+    native
+    capital
+    currency
+    states {
+      name 
+    }
+  }
+}
+
+
+Response:
+
+{
+  "data": {
+    "countries": [
+      {
+        "code": "AD",
+        "name": "Andorra",
+        "native": "Andorra",
+        "capital": "Andorra la Vella",
+        "currency": "EUR",
+        "states": []
+      },
+  "states": [
+          {
+            "name": "Ciudad Autónoma de Buenos Aires"
+          },
+          {
+            "name": "Buenos Aires"
+          },
+          {
+            "name": "Catamarca"
+          },
+          {
+            "name": "Chaco"
+          }
+]
+}
+...................................................................................
+				Arguments
+..................................................................................
+
+If the only thing we could do was traverse objects and their fields, GraphQL would already be a very useful language for data fetching. But when you add the ability to pass arguments to fields, things get much more interesting.
+
+eg:
+{
+  human(id: "1000") {
+    name
+    height
+  }
+}
+In a system like REST, you can only pass a single set of arguments - the query parameters and URL segments in your request. But in GraphQL, every field and nested object can get its own set of arguments, making GraphQL a complete replacement for making multiple API fetches. You can even pass arguments into scalar fields, to implement data transformations once on the server, instead of on every client separately.
+
+{
+  human(id: "1000") {
+    name
+    height(unit: FOOT)
+  }
+}
+
+eg:
+query ($code: ID!) {
+  country(code: $code) {
+    code
+    name
+    native
+    phone
+    continent {
+      code
+      name
+    }
+    capital
+    currency
+    languages {
+      code
+      name
+      native
+      rtl
+    }
+    emoji
+    emojiU
+    states {
+      code
+      name
+    }
+  }
+}
+
+PASSING parameters:
+{
+  "code": "IN"
+}
+....................................................................
+				default values
+
+Default variables
+Default values can also be assigned to the variables in the query by adding the default value after the type declaration.
+
+.............................................................................................
+				  Dynamic Arguments-Variables
+..............................................................................................
+
+Query can be paramertized with variables, maximizing query reuse
+
+Syntax:
+   $variableName
+
+{
+  getProfile($id:Int){
+    user {
+      name
+      pic
+    }
+  }
+}
+
+How to pass variable 
+{"id" : 5 }
+{"id" : 6 }
+
+Variable default Value
+
+{
+  getProfile($id:Int=2){
+    user {
+      name
+      pic
+    }
+  }
+}
+
+more variables
+{
+  getProfile($id:Int,$withFriends:Boolean=false){
+    user {
+      name
+      pic  
+    }
+  }
+}
+{"id" : 5 ,"withFriends":false}
+
+eg:
+query($code:ID="US") {
+  country(code: $code) {
+    code
+    name
+    native
+    phone
+    continent {
+      code
+      name
+    }
+    capital
+    currency
+    languages {
+      code
+      name
+      native
+      rtl
+    }
+    emoji
+    emojiU
+    states {
+      code
+      name
+    }
+  }
+}
+
+how to pass query parameters?
+{"code": "IN"}
+
+if you dont pass query parameters, default parameter to be used.
+
+.........................................................................................
+				  Field Aliases
+..........................................................................................
+
+Without aliases:
+
+{ 
+
+ user(id:1) {
+    id
+    name
+ }
+
+}
+
+{
+  "data": {
+    "user" : {
+      "id" :1
+      "name": "Subramaian"
+    }
+  }
+}
+
+{ 
+
+ subu:user(id:1) {
+    id
+    name
+ }
+
+}
+With aliases:
+{
+  "data": {
+    "subu" : {
+      "id" :1
+      "name": "Subramaian"
+    }
+  }
+}
+..
+query($code:ID="US") {
+  mycountry:country(code: $code) {
+    code
+    name
+    native
+    phone
+    continent {
+      code
+      name
+    }
+    capital
+    currency
+    languages {
+      code
+      name
+      native
+      rtl
+    }
+    emoji
+    emojiU
+    states {
+      code
+      name
+    }
+  }
+}
+..................................................................................
+			complex Type parameters
+
+query ($filter: LanguageFilterInput) {
+  languages(filter: $filter) {
+    code
+    name
+    native
+    rtl
+  }
+}
+
+{
+  "filter": {
+    "code": {
+      "eq": "pt" 
+    }
+  }
+}
+..
+
+..............................................................................................
+				  Fragments: Resuable SelectionSet
+..............................................................................................
+
+Without Fragment:
+.................
+
+{
+ user(id:4) {
+
+  friends {
+    id
+    name
+    pic
+  }
+  mutualfriends {
+    id
+    name
+    pic
+  }
+ }
+
+}
+
+With Fragment:
+.................
+
+{
+  user(id:4) {
+
+  friends {
+    ...friendsFields
+  }
+  mutualfriends {
+   ...friendsFields
+  }
+ }
+
+}
+fragement friendsFields on User {
+  id
+  name
+  pic
+}
+
+eg:
+{
+  a1countries: countries {
+    ...countryinfo
+  }
+  a2countries: countries {
+    ...countryinfo
+  }
+
+}
+ fragment countryinfo on Country {
+  name,
+  capital
+}
+
+Response:
+{
+  "data": {
+    "a1countries": [
+      {
+        "name": "Andorra",
+        "capital": "Andorra la Vella"
+      },
+      {
+        "name": "United Arab Emirates",
+        "capital": "Abu Dhabi"
+      },
+"a2countries": [
+      {
+        "name": "Andorra",
+        "capital": "Andorra la Vella"
+      },
+      {
+        "name": "United Arab Emirates",
+        "capital": "Abu Dhabi"
+      }
+}
+.....................................................................................
+				 Directives : control flow
+
+@include(if:Boolean)
+@skip(if:Boolean)
+
+{
+  getProfile($id:Int,$withFriends:Boolean=false){
+    user {
+      name
+      pic  
+      friends @include(if:$withFriends)   {
+	name
+      }
+    }
+  }
+}
+{"id" : 5 ,"withFriends":true}
+
+@include(if: Boolean) Only include this field in the result if the argument is true.
+@skip(if: Boolean) Skip this field if the argument is true.
+
+Directives can be useful to get out of situations where you otherwise would need to do string manipulation to add and remove fields in your query.
+
+
+eg:
+query($code: ID!, $rtl: Boolean!) {
+  language(code: $code) {
+    name
+    native @include(if: $rtl) 
+  }
+}
+
+input:
+{
+  "code": "en","rtl": false 
+}
+
+Response:
+{
+  "data": {
+    "language": {
+      "name": "English"
+    }
+  }
+}
+input:
+{
+  "code": "en","rtl": true
+}
+
+Response 
+{
+  "data": {
+    "language": {
+      "name": "English",
+      "native": "English"
+    }
+  }
+}
+.....................................................................................
+.....................................................................................				     Server Side Design
+			  Schema Defintion language
+..............................................................................................
+
+GraphQL Development Components:
+
+1.schema defintion 
+   schema.graphqls
+2.Domain models 
+3.Data Fetcher
+  
+
+How to start Graphql apps?
+
+1.Schema driven
+   write schema first 
+   schema is written based on biz use case like apis and data struture
+   
+2.Model driven
+   create models(POJOS) , based on Model , we can create Schema
+
+SDL Core concepts:
+
+Every Schema which starts with Root Type- Schema
+Schema is just Object
+
+General Syntax
+type typeName {
+  field:Type
+}
+
+eg:
+Core Type:
+
+type schema {
+  query:Query
+  mutation:Mutation
+  subscription:Subscription
+}
+
+type Query {
+  greet:String
+  name:String
+}
+
+Data Types:
+1.scallar types : Primitives
+
+1.Int -  32 bit signed integer
+2.String - UTF-8 char sequence
+3.Boolean - true or  false
+4.Float - singed double precision floating point value
+5.ID - which represents uniquie identifer, used to fetch object ,
+........
+Advanced Types
+
+1.enum - special scalar that is holding particular set of allowed values.
+
+
+2.Custom Type/Complex Type
+
+type Query {
+   peron:Person
+}
+//complex Type
+
+type Person {
+  id:ID
+  name:String
+  city:String
+  age:Int
+}
+...................
+API may return data or not.
+
+With data
+{
+ name  ----> {"name":"foo"  }
+}
+{
+ name  ----> {"name":null  }
+}
+
+How to enforce the field must have data?
+ =>not null
+
+type Person {
+  id:ID
+  name:String!
+  city:String
+  age:Int
+}
+  name:String! 
+ here we are marking it is as non-null by adding an exclamation mark.
+
+.......................................................................................
+				  Parametermized api
+
+
+type Query{
+  filterByCity(city:String):Person
+}
+
+type Person {
+  id:ID
+  name:String!
+  city:String
+  age:Int
+}
+..............................................................................................
+				How to return collection /List of Data
+
+
+type Query{
+  findAllPersons():[Person]!
+}
+
+type Person {
+  id:ID
+  name:String!
+  city:String
+  age:Int
+}
+.....................................................................................
+				 Interfaces
+.....................................................................................
+
+Interface is an abstract common type which can be reused by other types
+
+interface Human {
+  id:ID
+  name:String!
+  city:String
+  age:Int
+}
+
+type Player implements Human {
+  id:ID
+  name:String!
+  city:String
+  age:Int
+  teams:[Team]
+}
+
+type Employee implements Human {
+  id:ID
+  name:String!
+  city:String
+  age:Int
+  
+}
+........................................................................................
+				Union Types
+
+A variable can hold possible list of types
+
+union userId = String | Int
+
+.....................................................................................
+				Input Types
+
+This is very usefull in mutations for getting input 
+
+input Person {
+ name:String
+ city:String
+}
+.....................................................................................
+Mutation:
+
+
+input User {
+ name:String
+ city:String
+}
+
+mutation createUser($user:User!) {
+
+}
+...........................&&&&&&&&&&&&&&&&&.........................................
+			      Introduction to Apollo Server
+
+Apollo Server is an open-source, spec-compliant GraphQL server that's compatible with any GraphQL client, including Apollo Client. It's the best way to build a production-ready, self-documenting GraphQL API that can use data from any source.
+
+The GraphQL server for a subgraph in a federated supergraph
+A stand-alone GraphQL server
+An add-on to your application's existing Node.js middleware (such as Express, AWS Lambda, or Fastify)
+..
+
+Getting started with Apollo Server:
+...................................
+
+Obtain a basic understanding of GraphQL principles
+Define a GraphQL schema that represents the structure of your data set
+Run an instance of Apollo Server that lets you execute queries against your schema
+
+Project setup:
+
+
+
+mkdir graphql-server-example
+cd graphql-server-example
+npm init --yes
+
+Step 2: Install dependencies
+graphql (also known as graphql-js) is the library that implements the core GraphQL parsing and execution algorithms.
+@apollo/server is the main library for Apollo Server itself. Apollo Server knows how to turn HTTP requests and responses into GraphQL operations and run them in an extensible context with support for plugins and other features.
+
+npm install @apollo/server graphql
+
+Set up with TypeScript:
+mkdir src
+src/index.ts
+npm install --save-dev typescript @types/node
+
+tsconfig.json
+{
+  "compilerOptions": {
+    "rootDirs": ["src"],
+    "outDir": "dist",
+    "lib": ["es2020"],
+    "target": "es2020",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "types": ["node"]
+  }
+}
+
+src/index.ts
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+
+// A schema is a collection of type definitions (hence "typeDefs")
+// that together define the "shape" of queries that are executed against
+// your data.
+const typeDefs = `#graphql
+  # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
+  # This "Book" type defines the queryable fields for every book in our data source.
+  type Book {
+    title: String
+    author: String
+  }
+
+  # The "Query" type is special: it lists all of the available queries that
+  # clients can execute, along with the return type for each. In this
+  # case, the "books" query returns an array of zero or more Books (defined above).
+  type Query {
+    books: [Book]
+  }
+`;
+//Data Set
+const books = [
+    {
+        title: 'The Awakening',
+        author: 'Kate Chopin',
+    },
+    {
+        title: 'City of Glass',
+        author: 'Paul Auster',
+    },
+];
+
+// Resolvers define how to fetch the types defined in your schema.
+// This resolver retrieves books from the "books" array above.
+const resolvers = {
+    Query: {
+        books: () => books,
+    },
+};
+
+//Server
+// The ApolloServer constructor requires two parameters: your schema
+// definition and your set of resolvers.
+const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+});
+
+// Passing an ApolloServer instance to the `startStandaloneServer` function:
+//  1. creates an Express app
+//  2. installs your ApolloServer instance as middleware
+//  3. prepares your app to handle incoming requests
+const { url } = await startStandaloneServer(server, {
+    listen: { port: 4000 },
+});
+
+console.log(`🚀  Server ready at: ${url}`);
+.....................................................................................
+Apollo Server Web Server Integrations:
+
+Apollo Server 4 includes two built-in integrations:
+ startStandaloneServer and expressMiddleware.
+
+The startStandaloneServer function sets useful defaults to get you started quickly. Under the hood, the startStandaloneServer function uses Apollo Server 4's Express integration (i.e., expressMiddleware). 
+
+The expressMiddleware function is Apollo Server 4's Express integration.
+...
+Other web frameworks:
+AWS Lambda	@as-integrations/aws-lambda
+Fastify	@as-integrations/fastify
+Hapi	@as-integrations/hapi
+Koa	@as-integrations/koa
+Next.js	@as-integrations/next
+Nuxt / h3	@as-integrations/h3
+....................................................................................
+			  Modularization
+
+
+tsconfig.json
+{
+    "compilerOptions": {
+      "rootDirs": ["src"],
+      "outDir": "dist",
+      "lib": ["es2020"],
+      "target": "es2020",
+      "module": "esnext",
+      "moduleResolution": "node",
+      "esModuleInterop": true,
+      "types": ["node"]
+    }
+  }
+
+package.json
+{
+  "name": "graphql-server-example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "compile": "tsc",
+    "start": "npm run compile && node --experimental-specifier-resolution=node ./dist/index.js"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^18.11.18",
+    "typescript": "^4.9.4"    
+  },
+  "dependencies": {
+    "@apollo/server": "^4.3.0",
+    "graphql": "^16.6.0"
+  }
+}
+src/resolvers/book.resolver.ts
+const books = [
+    {
+        title: 'The Awakening',
+        author: 'Kate Chopin',
+    },
+    {
+        title: 'City of Glass',
+        author: 'Paul Auster',
+    },
+    {
+        title: 'GraphQL in Action',
+        author: 'Subramanian Murugan',
+    },
+];
+// Resolvers define how to fetch the types defined in your schema.
+// This resolver retrieves books from the "books" array above.
+export const resolvers = {
+    Query: {
+        books: () => books,
+    },
+};
+
+src/schema/book.schema.ts
+
+// A schema is a collection of type definitions (hence "typeDefs")
+// that together define the "shape" of queries that are executed against
+// your data.
+export const typeDefs = `#graphql
+  # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
+
+  # This "Book" type defines the queryable fields for every book in our data source.
+  type Book {
+    title: String
+    author: String
+  }
+
+  # The "Query" type is special: it lists all of the available queries that
+  # clients can execute, along with the return type for each. In this
+  # case, the "books" query returns an array of zero or more Books (defined above).
+  type Query {
+    books: [Book]
+  }
+`;
+
+
+src/index.ts
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import {typeDefs} from './schema/book.schema'
+import {resolvers} from './resolvers/book.resolver'
+// The ApolloServer constructor requires two parameters: your schema
+// definition and your set of resolvers.
+const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+  });
+  
+  // Passing an ApolloServer instance to the `startStandaloneServer` function:
+  //  1. creates an Express app
+  //  2. installs your ApolloServer instance as middleware
+  //  3. prepares your app to handle incoming requests
+  const { url } = await startStandaloneServer(server, {
+    listen: { port: 4000 },
+  });
+  
+  console.log(`🚀  Server ready at: ${url}`);
+
+
+E:\session\TechMahendra\graphql-server-example>npm start
+
+> graphql-server-example@1.0.0 start
+> npm run compile && node --experimental-specifier-resolution=node ./dist/index.js
+
+
+> graphql-server-example@1.0.0 compile
+> tsc
+
+(node:22960) ExperimentalWarning: The Node.js specifier resolution flag is experimental. It could change or be removed at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+🚀  Server ready at: http://localhost:4000/
+....................................................................................
+			Modularizing your GraphQL schema code
+
+npm i graphql-tools --save-dev
+
+
+src/schema/author.ts
+
+export const typeDef = `
+  type Author {
+    id: Int!
+    firstName: String
+    lastName: String
+    books: [Book]
+  }
+`;
+export const resolvers = {
+  Author: {
+    books: () => { [] },
+  }
+};
+
+src/schema/book.ts
+export const typeDef = `
+  type Book {
+    title: String
+    author: Author
+  }
+`;
+const books = [
+    {
+        title: 'The Awakening',
+        author: 'Kate Chopin',
+    },
+    {
+        title: 'City of Glass',
+        author: 'Paul Auster',
+    },
+    {
+        title: 'GraphQL in Action',
+        author: 'Subramanian Murugan',
+    },
+];
+export const resolvers = {
+    Query: {
+        books: () => books,
+    },
+};
+
+src/schema/schema.ts
+import { makeExecutableSchema } from '@graphql-tools/schema'
+import pkg from 'lodash';
+const { merge } = pkg
+import {
+    typeDef as Author,
+    resolvers as authorResolvers,
+} from './author.js';
+import {
+    typeDef as Book,
+    resolvers as bookResolvers,
+} from './book.js';
+
+const Query = `
+  type Query {
+    author(id: Int!): String
+    books: [Book]
+  }
+`;
+
+const finalSchema = makeExecutableSchema({
+    typeDefs: [Query, Author, Book],
+    resolvers: merge(authorResolvers, bookResolvers),
+});
+export { finalSchema }
+
+
+src/index.ts
+
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import { finalSchema } from './schemas/schema'
+
+const server = new ApolloServer({
+    schema: finalSchema
+});
+
+const { url } = await startStandaloneServer(server, {
+    listen: { port: 4000 },
+});
+
+console.log(`🚀  Server ready at: ${url}`);
+....................................................................................
+			   How to modularize the schema files
+
+project
+ src
+
+
+package.json
+{
+  "name": "graphql-server-example1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "compile": "tsc",
+    "copy-files": "copyfiles -u 1 src/**/*.graphql  dist/",
+    "start": "npm run compile &&  npm run copy-files  && node --experimental-specifier-resolution=node ./dist/index.js"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^18.11.18",
+    "copyfiles": "^2.4.1",
+    "graphql-tools": "^8.3.14",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "@apollo/server": "^4.3.0",
+    "graphql": "^16.6.0",
+    "lodash": "^4.17.21"
+  }
+}
+tsconfig.json
+{
+    "compilerOptions": {
+      "rootDirs": ["src"],
+      "outDir": "dist",
+      "lib": ["es2020"],
+      "target": "es2020",
+      "module": "esnext",
+      "moduleResolution": "node",
+      "esModuleInterop": true,
+      "types": ["node"]
+    }
+  }
+
+src/schemas/schema.graphql
+type Query {
+  hello: String
+}
+
+src/resolvers/resolver.ts
+export const resolvers = {
+    Query: {
+        hello: () => "Hello world"
+    },
+};
+src/index.ts
+
+import { makeExecutableSchema } from '@graphql-tools/schema'
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import { resolvers } from './resolvers/resolver'
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+import fs from "fs";
+import path from "path";
+
+const typeDefs  = fs.readFileSync(path.join(__dirname, "schemas/schema.graphql"),"utf-8")
+
+const schema = makeExecutableSchema({
+    typeDefs, resolvers
+});
+
+const server = new ApolloServer({
+    schema
+});
+const { url } = await startStandaloneServer(server, {
+    listen: { port: 4000 },
+});
+
+console.log(`🚀  Server ready at: ${url}`);
+
+
+
+.....................................................................................	
+			 Generating types from a GraphQL schema
+

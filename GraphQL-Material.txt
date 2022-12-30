@@ -1451,20 +1451,539 @@ Response:
     "hello": "Hello,Apollo GraphQL"
   }
 }
+.....................................................................................
+				Descriptions(docStrings)
+.....................................................................................
+
+GraphQl schema definition supports markdown enabled documentation strings called "descriptions" . This helps consumers of your graph discover fields and learn how to use them.
+
+""comments"" =>single line comment
+"""       =>multi line comments
+
+""
+eg:
+src/index.ts
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from "@apollo/server/standalone"
+
+//Define Schema
+const typeDefs = `
+#Simple Query:Which returns helloworld
+
+type Query {
+    """
+     This is hello api which returns hello world in 
+     in the string format.
+    """
+  hello:String
+  "This is hai api which returns hai messsage"
+  hai:String
+  
+}
+
+`
+//Define Resolver
+const resolvers = {
+    //Query
+    Query: {
+        hello() {
+            return "Hello,Apollo GraphQL"
+        },
+        hai() {
+            return "Hai , GraphQL!"
+        }
+    }
+    //Mutation
+
+    //Subscription
+}
+// const server = new ApolloServer({
+//     typeDefs: typeDefs,
+//     resolvers: resolvers
+// })
+const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+})
+//start the webserver and deploy
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+....................................................................................
+			  Default Resolver
+
+if you define query, if you dont define resolver, the Apollo by default provides default resolver which always returns "null".
+
+src/index.ts
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from "@apollo/server/standalone"
+
+//Define Schema
+const typeDefs = `
+  type Query {
+    hello:String
+  }
+
+`
+//Define Resolver
+const resolvers = {
+    //Query
+    Query: {
+      
+    }
+}
+
+const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+})
+//start the webserver and deploy
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+
+Request:
+query {
+  hello
+}
+Response:
+{
+  "data": {
+    "hello": null
+  }
+}
+..................................................................................
+			      Object Type and Queries
+...................................................................................
+
+src/index.ts
+
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from "@apollo/server/standalone"
+
+//Define Schema
+const typeDefs = `
+  type User {
+    id:ID
+    firstName:String
+    lastName:String
+    age:Int
+    points:Float
+    status:Boolean
+  }
+  #Query for User
+  type Query {
+    user:User
+  }
+
+`
+//Define Resolver
+const resolvers = {
+    //Query
+    Query: {
+        user() {
+            return {
+                id: 1,
+                firstName: 'Subramanian',
+                lastName: 'Murugan',
+                age: 42,
+                points: 200.5,
+                status: true
+            }
+        }
+    }
+}
+
+const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+})
+//start the webserver and deploy
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+
+Request:
+
+query {
+  user {
+    id
+    firstName
+    lastName
+    points
+    status
+  }
+}
+Response:
+{
+  "data": {
+    "user": {
+      "id": "1",
+      "firstName": "Subramanian",
+      "lastName": "Murugan",
+      "points": 200.5,
+      "status": true
+    }
+  }
+}
+....................................................................................
+			 Collections
+
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from "@apollo/server/standalone"
+
+//Define Schema
+const typeDefs = `
+  type User {
+    id:ID
+    firstName:String
+    lastName:String
+    age:Int
+    points:Float
+    status:Boolean
+  }
+  #Query for User
+  type Query {
+    users:[User]
+  }
+
+`
+////
+//Mock data
+const USERS = [{
+    id: 1,
+    firstName: 'Subramanian',
+    lastName: 'Murugan',
+    age: 42,
+    points: 200.5,
+    status: true
+
+},
+{
+    id: 2,
+    firstName: 'Ram',
+    lastName: 'Murugan',
+    age: 35,
+    points: 100.5,
+    status: true
+
+},
+{
+    id: 3,
+    firstName: 'Geetha',
+    lastName: 'Subramanian',
+    age: 38,
+    points: 500.5,
+    status: false
+
+},
+{
+    id: 4,
+    firstName: 'John',
+    lastName: 'Mc',
+    age: 23,
+    points: 200.5,
+    status: false
+
+},
+{
+    id: 5,
+    firstName: 'Karthik',
+    lastName: 'Subramanian',
+    age: 22,
+    points: 500.5,
+    status: true
+
+}
+]
 
 
 
+//Define Resolver
+const resolvers = {
+    //Query
+    Query: {
+        users() {
+            return USERS 
+        }
+    }
+}
+
+const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+})
+//start the webserver and deploy
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+
+Request:
+query {
+  users {
+    id
+    firstName
+    lastName
+    points
+    status
+  }
+}
+Response:
+
+{
+  "data": {
+    "users": [
+      {
+        "id": "1",
+        "firstName": "Subramanian",
+        "lastName": "Murugan",
+        "points": 200.5,
+        "status": true
+      },
+      {
+        "id": "2",
+        "firstName": "Ram",
+        "lastName": "Murugan",
+        "points": 100.5,
+        "status": true
+      },
+      {
+        "id": "3",
+        "firstName": "Geetha",
+        "lastName": "Subramanian",
+        "points": 500.5,
+        "status": false
+      },
+      {
+        "id": "4",
+        "firstName": "John",
+        "lastName": "Mc",
+        "points": 200.5,
+        "status": false
+      },
+      {
+        "id": "5",
+        "firstName": "Karthik",
+        "lastName": "Subramanian",
+        "points": 500.5,
+        "status": true
+      }
+    ]
+  }
+}
+.....................................................................................
+			 Handle Args and parameters
+.....................................................................................
+How to handle args/parameters?
+ A Resolver function takes four positional optional args
+ 
+fun(parent,args,contextValue,info){
+
+
+}
+args it is variable going to hold parameters passed by clients.
+args value is going to be literal object.
+How many parameters you pass , all parameters are stored inside single literal object
+
+Eg:
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from "@apollo/server/standalone"
+
+//Define Schema
+const typeDefs = `
+type Query {
+  hello(name:String):String
+}
+
+`
+//Define Resolver
+const resolvers = {
+    //Query
+    Query: {
+        hello(parent, args, contextValue, info) {
+            console.log(args)
+            return `Hello ${args.name}`
+        }
+    }
+
+}
+
+const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+})
+//start the webserver and deploy
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+
+
+Request: Static Parameters:
+query {
+  hello(name: "Ram")
+}
+
+Response:
+{
+  "data": {
+    "hello": "Hello Ram"
+  }
+}
+Request:Dynamic Parameters
+query getName($name:String) {
+  hello(name:$name)
+}
+Variable
+{
+  "name":"Ram"
+}
+{
+  "data": {
+    "hello": "Hello Ram"
+  }
+}
+.....................................................................................
+			  Handling Complex args and parameters
+
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from "@apollo/server/standalone"
+
+//Define Schema
+const typeDefs = `
+  type User {
+    id:ID
+    firstName:String
+    lastName:String
+    age:Int
+    points:Float
+    status:Boolean
+  }
+  #Query for User
+  type Query {
+    users:[User]
+    user(id:ID!):User
+  }
+
+`
+////
+//Mock data
+const USERS = [{
+    id: 1,
+    firstName: 'Subramanian',
+    lastName: 'Murugan',
+    age: 42,
+    points: 200.5,
+    status: true
+
+},
+{
+    id: 2,
+    firstName: 'Ram',
+    lastName: 'Murugan',
+    age: 35,
+    points: 100.5,
+    status: true
+
+},
+{
+    id: 3,
+    firstName: 'Geetha',
+    lastName: 'Subramanian',
+    age: 38,
+    points: 500.5,
+    status: false
+
+},
+{
+    id: 4,
+    firstName: 'John',
+    lastName: 'Mc',
+    age: 23,
+    points: 200.5,
+    status: false
+
+},
+{
+    id: 5,
+    firstName: 'Karthik',
+    lastName: 'Subramanian',
+    age: 22,
+    points: 500.5,
+    status: true
+
+}
+]
 
 
 
+//Define Resolver
+const resolvers = {
+    //Query
+    Query: {
+        users() {
+            return USERS
+        },
+        user(_, args) {
+            const { id } = args; //destructure args object:Extract id field
+            //biz logic
+            return USERS.find(user => {
+                return user.id === +id
+            })
+        }
+    }
+}
 
+const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+})
+//start the webserver and deploy
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
 
-
-
-
-
-
-
+Request:
+query getuserById($id:ID!){
+    user(id:$id) {
+      id
+      firstName
+      lastName
+    }
+}
+Response:
+{
+  "data": {
+    "user": {
+      "id": "5",
+      "firstName": "Karthik",
+      "lastName": "Subramanian"
+    }
+  }
+}
+if parameter does not match: it returns null
+{
+  "data": {
+    "user": null
+  }
+}
 
 
 

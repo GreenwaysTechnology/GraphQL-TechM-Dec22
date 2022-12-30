@@ -1984,8 +1984,32 @@ if parameter does not match: it returns null
     "user": null
   }
 }
+....................................................................................
 
+Coding Challange:
+users : [
+ {
+  "id": "1",
+  "name":"A"
+  "email":"a@gmail.com"
+  "address": {
+	"city" :"X",
+         "state","Y"
+   }
+ },
+ {
+  "id": "2",
+  "name":"A1"
+  "email":"a1@gmail.com"
+  "address": {
+	"city" :"X",
+        "state","Y"
+   }
+ }
 
+]
+
+1.prepare schema for the above response
 
 
 

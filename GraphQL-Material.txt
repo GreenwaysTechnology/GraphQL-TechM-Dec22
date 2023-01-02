@@ -2890,7 +2890,15 @@ const { url } = await startStandaloneServer(server, {
     }
 })
 console.log(`Apollo Server is Ready at ${url}`)
+.....................................................................................
+				interface
+.....................................................................................
+An interface also provides program to super type approach similar to union type...
+An interface provides a set of filelds that multiple objects types can include
 
+type Query {
+  myQuery:InterfaceType
+}
 
 
   

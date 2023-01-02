@@ -3,82 +3,51 @@ import { startStandaloneServer } from "@apollo/server/standalone"
 
 //Define Schema
 const typeDefs = `
- #Product OutStock or Availablity or Product
-
- #Product Name is Candy
- type Candy{
-   id:String!
-   name:String!
-   price:Float
- }
- #Status Types
- type OutOfStock {
-    restockDate:String
- }
- type RegionUnAvailablity {
-    availableRegions: [String!]
- }
-
- #union type
- union CandyResult = Candy | OutOfStock | RegionUnAvailablity
-
- type Query {
-    candy(id:String!):CandyResult
- }
-
+interface Book {
+    title: String!
+    author: Author!
+}
+  
+type Course {
+    name:String
+}
+type Author {
+    name:String
+}
+type Textbook implements Book {
+    title: String!
+    author: Author!
+    courses: [Course!]!
+}
+type ColoringBook implements Book {
+    title: String!
+    author: Author!
+    colors: [String!]!
+}
+  
+type Query {
+  books: [Book!]!
+}
  `
-//data
-const CANDIES = [
-    {
-        "id": "gummy-bears",
-        "name": "Haribo Gummy Bears",
-        "price": 100.89
-    },
-    {
-        "id": "sour-patch",
-        "name": "Sour-Patch Kids",
-        "price": 45.89
-    },
-    {
-        "id": "wonka-nerds",
-        "name": "Wonka Nerds",
-        "restockDate": "2022-04-10"
-    },
-    {
-        "id": "swirly-pops",
-        "name": "Swirly Pops",
-        "availableRegions": ["Coimbatore", "Chennai", "Banaglore"]
-    }
-]
 
 
 //Define Resolver
 const resolvers = {
 
-    //Resolver Type Resolution function
-    CandyResult: {
-        __resolveType(obj, contextValue, info) {
-            //we need to pass unquie fields
-            if (obj.restockDate) {
-                return 'OutOfStock' // Type Name Must be String
+    Book: {
+        __resolveType(book, contextValue, info) {
+            if (book.courses) {
+                return 'Textbook' //must return Implementaton type in String
             }
-            if (obj.availableRegions) {
-                return 'RegionUnAvailablity'
-            }
-            if (obj.price) {
-                return 'Candy'
+            if (book.colors) {
+                return 'ColoringBook'
             }
             return null
         }
     },
-
     //Query
     Query: {
-        candy(_, args) {
-            return CANDIES.find(candy => {
-                return candy.id === args.id
-            })
-        }
+
     }
 
 }

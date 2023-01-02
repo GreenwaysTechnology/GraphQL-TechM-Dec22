@@ -3,75 +3,81 @@ import { startStandaloneServer } from "@apollo/server/standalone"
 
 //Define Schema
 const typeDefs = `
+ #Product OutStock or Availablity or Product
 
-type User {
- id:ID!
- name:String
- email:String
-}
+ #Product Name is Candy
+ type Candy{
+   id:String!
+   name:String!
+   price:Float
+ }
+ #Status Types
+ type OutOfStock {
+    restockDate:String
+ }
+ type RegionUnAvailablity {
+    availableRegions: [String!]
+ }
 
-type Query {
-  users:[User]
-  user(id:ID!):User
-}
+ #union type
+ union CandyResult = Candy | OutOfStock | RegionUnAvailablity
 
-input UserInput{
-    id:ID!
-    name:String
-    email:String
-}
+ type Query {
+    candy(id:String!):CandyResult
+ }
 
-type AddUserMutationResponse {
-    code:String!
-    success:Boolean!
-    message:String!
-}
-
-type Mutation {
-   createUser(userInput:UserInput):AddUserMutationResponse
-}
-`
-
-const USERS = [{
-    id: 1,
-    name: 'A',
-    email: 'a@gmail.com'
-},
-{
-    id: 2,
-    name: 'B',
-    email: 'b@gmail.com'
-},
-{
-    id: 3,
-    name: 'C',
-    email: 'c@gmail.com'
-}
-
+ `
+//data
+const CANDIES = [
+    {
+        "id": "gummy-bears",
+        "name": "Haribo Gummy Bears",
+        "price": 100.89
+    },
+    {
+        "id": "sour-patch",
+        "name": "Sour-Patch Kids",
+        "price": 45.89
+    },
+    {
+        "id": "wonka-nerds",
+        "name": "Wonka Nerds",
+        "restockDate": "2022-04-10"
+    },
+    {
+        "id": "swirly-pops",
+        "name": "Swirly Pops",
+        "availableRegions": ["Coimbatore", "Chennai", "Banaglore"]
+    }
 ]
+
+
 //Define Resolver
 const resolvers = {
-    //Query
-    Query: {
-        users() {
-            return USERS
-        },
-        user(_, args) {
-            return USERS.find(user => user.id === +args.id)
+
+    //Resolver Type Resolution function
+    CandyResult: {
+        __resolveType(obj, contextValue, info) {
+            //we need to pass unquie fields
+            if (obj.restockDate) {
+                return 'OutOfStock' // Type Name Must be String
+            }
+            if (obj.availableRegions) {
+                return 'RegionUnAvailablity'
+            }
+            if (obj.price) {
+                return 'Candy'
+            }
+            return null
         }
     },
-    //Mutation
-    Mutation: {
-        //add new User
-        createUser(_, args) {
-            //call api to insert users
-            USERS.push(args.userInput)
-            console.log(args.userInput)
-            return {
-                code: '200',
-                success: true,
-                message: 'New User added!'
-            }
+
+    //Query
+    Query: {
+        candy(_, args) {
+            return CANDIES.find(candy => {
+                return candy.id === args.id
+            })
         }
     }
 

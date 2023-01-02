@@ -3,33 +3,21 @@ import { startStandaloneServer } from "@apollo/server/standalone"
 
 //Define Schema
 const typeDefs = `
-
-type User {
- id:ID!
- name:String
- email:String
-}
-
-type Query {
-  users:[User]
-  user(id:ID!):User
-}
-
-input UserInput{
+  type User {
     id:ID!
     name:String
     email:String
-}
+    address:[Address] #This becomes Query
+  }
+  type Address {
+    city:String
+    state:String
+  }
+  #Query for User
+  type Query {
+    users:[User] 
+  }
 
-type AddUserMutationResponse {
-    code:String!
-    success:Boolean!
-    message:String!
-}
-
-type Mutation {
-   createUser(userInput:UserInput):AddUserMutationResponse
-}
 `
 
 const USERS = [{
@@ -49,32 +37,56 @@ const USERS = [{
 }
 
 ]
+
+
+const ADDRESS = [{
+    city: 'CBE',
+    state: 'TN',
+    id: 1 //linking field
+},
+{
+    city: 'CHN',
+    state: 'TN',
+    id: 1 //linking field
+},
+{
+    city: 'BNG',
+    state: 'KA',
+    id: 2
+},
+{
+    city: 'CHN',
+    state: 'TN',
+    id: 2
+},
+{
+    city: 'HYD',
+    state: 'TS',
+    id: 3
+},
+{
+    city: 'CBE',
+    state: 'TN',
+    id: 3
+}
+]
+
 //Define Resolver
 const resolvers = {
     //Query
     Query: {
         users() {
             return USERS
-        },
-        user(_, args) {
-            return USERS.find(user => user.id === +args.id)
         }
     },
-    //Mutation
-    Mutation: {
-        //add new User
-        createUser(_, args) {
-            //call api to insert users
-            USERS.push(args.userInput)
-            console.log(args.userInput)
-            return {
-                code: '200',
-                success: true,
-                message: 'New User added!'
-            }
+    //Resolver Chain
+    User: {
+        address(parent, args, contextValue, info) {
+            return ADDRESS.filter(address => {
+                return address.id === parent.id
+            })
         }
     }
-
 }
 
 const server = new ApolloServer({

@@ -3,56 +3,59 @@ import { startStandaloneServer } from "@apollo/server/standalone"
 
 //Define Schema
 const typeDefs = `
-interface Book {
-    title: String!
-    author: Author!
+ type Book {
+    title:String
+    author:String
+ }
+ type Query {
+    books:[Book]
+ }
+
+`
+
+const BOOKS = [{
+    title: 'GraphQl in Action',
+    author: 'A'
+},
+{
+    title: 'Apollo in Action',
+    author: 'B'
+},
+{
+    title: 'Typescript in Action',
+    author: 'C'
+},
+{
+    title: 'Rest in Action',
+    author: 'D'
 }
-  
-type Course {
-    name:String
+
+]
+//Data source 
+export class BookDataSource {
+    getBooks() {
+        return BOOKS
+    }
 }
-type Author {
-    name:String
+
+interface MyContext {
+    dataSources: {
+        booksAPI: BookDataSource
+    }
 }
-type Textbook implements Book {
-    title: String!
-    author: Author!
-    courses: [Course!]!
-}
-type ColoringBook implements Book {
-    title: String!
-    author: Author!
-    colors: [String!]!
-}
-  
-type Query {
-  books: [Book!]!
-}
- `
 
 
 //Define Resolver
 const resolvers = {
-
-    Book: {
-        __resolveType(book, contextValue, info) {
-            if (book.courses) {
-                return 'Textbook' //must return Implementaton type in String
-            }
-            if (book.colors) {
-                return 'ColoringBook'
-            }
-            return null
-        }
-    },
     //Query
     Query: {
-
+        books(parent, args, contextValue, info) {
+            return contextValue.dataSources.booksAPI.getBooks()
+        }
     }
-
 }
 
-const server = new ApolloServer({
+const server = new ApolloServer<MyContext>({
     typeDefs,
     resolvers,
 })
@@ -60,6 +63,13 @@ const server = new ApolloServer({
 const { url } = await startStandaloneServer(server, {
     listen: {
         port: 4000
+    },
+    context: async ({ req, res }) => {
+        return {
+            dataSources: {
+                booksAPI: new BookDataSource()
+            }
+        }
     }
 })
 console.log(`Apollo Server is Ready at ${url}`)

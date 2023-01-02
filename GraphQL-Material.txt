@@ -2901,11 +2901,241 @@ type Query {
 }
 
 
-  
+
+
+query getBooks {
+  books {
+    __typename
+    title
+    ... on Textbook {
+      courses {
+        name
+      }
+    }
+    ... on ColoringBook {
+      colors
+    }
+  }
+}
+
+{
+  "data": {
+    "books": [
+      {
+        "__typename": "ColoringBook",
+        "title": "A",
+        "colors": [
+          "red"
+        ]
+      }
+    ]
+  }
+}
+....................................................................................
+				Context and ContextValue
+....................................................................................
+
+Context is Object - can be used to share information across application.
+Context information can be accessed inside resolvers,plugins,__resolverType with convention name called "contextValue".
+
+Contex Object:
+=>To data based connection info
+=>Auth and authorization details
+=>Data Sources for fetching Data..
+etc...
+
+context Function:
+ It is function which is part of "ApolloServer"
+
+const MyContext{
+   token:String
+   dataSource:String
+}
+
+const server = new ApolloServer<MyContext>({
+    typeDefs,
+    resolvers,
+})
+
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    },
+    context: async()=>{
+	return {
+	   token:'....',
+           dataSource:'...'
 	
+        }
+    }
+})
 
 
+ Query: {
+        books(parent,args,contextValue,info) {
+            contextValue.token...
+        }
+    },
 
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from "@apollo/server/standalone"
+
+interface MyContext {
+    greeting?: String
+}
+
+//Define Schema
+const typeDefs = `
+type Query {
+  hello:String  
+}
+
+`
+//Define Resolver
+const resolvers = {
+    //Query
+    Query: {
+        hello(parent, args, contextValue, info) {
+            return contextValue.greeting
+        }
+    }
+}
+
+const server = new ApolloServer<MyContext>({
+    typeDefs,
+    resolvers,
+})
+//start the webserver and deploy
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    },
+    context: async ({ req, res }) => {
+        return {
+            greeting: 'Hello GraphQL context'
+        }
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+
+.....................................................................................
+				Data Sources & Context
+...................................................................................
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from "@apollo/server/standalone"
+
+//Define Schema
+const typeDefs = `
+ type Book {
+    title:String
+    author:String
+ }
+ type Query {
+    books:[Book]
+ }
+
+`
+
+const BOOKS = [{
+    title: 'GraphQl in Action',
+    author: 'A'
+},
+{
+    title: 'Apollo in Action',
+    author: 'B'
+},
+{
+    title: 'Typescript in Action',
+    author: 'C'
+},
+{
+    title: 'Rest in Action',
+    author: 'D'
+}
+
+]
+//Data source 
+export class BookDataSource {
+    getBooks() {
+        return BOOKS
+    }
+}
+
+interface MyContext {
+    dataSources: {
+        booksAPI: BookDataSource
+    }
+}
+
+
+//Define Resolver
+const resolvers = {
+    //Query
+    Query: {
+        books(parent, args, contextValue, info) {
+            return contextValue.dataSources.booksAPI.getBooks()
+        }
+    }
+}
+
+const server = new ApolloServer<MyContext>({
+    typeDefs,
+    resolvers,
+})
+//start the webserver and deploy
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    },
+    context: async ({ req, res }) => {
+        return {
+            dataSources: {
+                booksAPI: new BookDataSource()
+            }
+        }
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+
+
+Request:
+query {
+  books {
+    title
+    author
+  }
+}
+
+Response:
+{
+  "data": {
+    "books": [
+      {
+        "title": "GraphQl in Action",
+        "author": "A"
+      },
+      {
+        "title": "Apollo in Action",
+        "author": "B"
+      },
+      {
+        "title": "Typescript in Action",
+        "author": "C"
+      },
+      {
+        "title": "Rest in Action",
+        "author": "D"
+      }
+    ]
+  }
+}
+
+Code Challange:
+Add all the code inside Datasource class
+=>addBook
+=>removeBook
+=>UpdateBook
+=>findBookById
 
 
 

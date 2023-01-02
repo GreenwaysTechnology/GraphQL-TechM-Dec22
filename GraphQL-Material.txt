@@ -2279,6 +2279,330 @@ query {
   }
 }
 ....................................................................................
+			Many to Many  - Many Users - Each User Many address
+....................................................................................
+
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from "@apollo/server/standalone"
+
+//Define Schema
+const typeDefs = `
+  type User {
+    id:ID!
+    name:String
+    email:String
+    address:[Address] #This becomes Query
+  }
+  type Address {
+    city:String
+    state:String
+  }
+  #Query for User
+  type Query {
+    users:[User]   
+  }
+
+`
+
+const USERS = [{
+    id: 1,
+    name: 'A',
+    email: 'a@gmail.com'
+},
+{
+    id: 2,
+    name: 'B',
+    email: 'b@gmail.com'
+},
+{
+    id: 3,
+    name: 'C',
+    email: 'c@gmail.com'
+}
+
+]
+
+
+const ADDRESS = [{
+    city: 'CBE',
+    state: 'TN',
+    id: 1 //linking field
+},
+{
+    city: 'CHN',
+    state: 'TN',
+    id: 1 //linking field
+},
+{
+    city: 'BNG',
+    state: 'KA',
+    id: 2
+},
+{
+    city: 'CHN',
+    state: 'TN',
+    id: 2
+},
+{
+    city: 'HYD',
+    state: 'TS',
+    id: 3
+},
+{
+    city: 'CBE',
+    state: 'TN',
+    id: 3
+}
+]
+
+//Define Resolver
+const resolvers = {
+    //Query
+    Query: {
+        users() {
+            return USERS
+        }
+    },
+    //Resolver Chain
+    User: {
+        address(parent, args, contextValue, info) {
+            console.log(parent)
+            return ADDRESS.filter(address => {
+                return address.id === parent.id
+            })
+        }
+    }
+}
+
+const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+})
+//start the webserver and deploy
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+
+Request:
+
+query {
+   users {
+     id
+     name
+     email
+     address {
+       city
+       state 
+       
+     }
+   }
+}
+
+Response:
+{
+  "data": {
+    "users": [
+      {
+        "id": "1",
+        "name": "A",
+        "email": "a@gmail.com",
+        "address": [
+          {
+            "city": "CBE",
+            "state": "TN"
+          },
+          {
+            "city": "CHN",
+            "state": "TN"
+          }
+        ]
+      },
+      {
+        "id": "2",
+        "name": "B",
+        "email": "b@gmail.com",
+        "address": [
+          {
+            "city": "BNG",
+            "state": "KA"
+          },
+          {
+            "city": "CHN",
+            "state": "TN"
+          }
+        ]
+      },
+      {
+        "id": "3",
+        "name": "C",
+        "email": "c@gmail.com",
+        "address": [
+          {
+            "city": "HYD",
+            "state": "TS"
+          },
+          {
+            "city": "CBE",
+            "state": "TN"
+          }
+        ]
+      }
+    ]
+  }
+}
+.....................................................................................
+			  Many - Many -Parametermized
+.....................................................................................
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from "@apollo/server/standalone"
+import { userInfo } from "os"
+
+//Define Schema
+const typeDefs = `
+  type User {
+    id:ID!
+    name:String
+    email:String
+    address:[Address] #This becomes Query
+  }
+  type Address {
+    city:String
+    state:String
+  }
+  #Query for User
+  type Query {
+    users:[User] 
+    user(id:ID):User
+  }
+
+`
+
+const USERS = [{
+    id: 1,
+    name: 'A',
+    email: 'a@gmail.com'
+},
+{
+    id: 2,
+    name: 'B',
+    email: 'b@gmail.com'
+},
+{
+    id: 3,
+    name: 'C',
+    email: 'c@gmail.com'
+}
+
+]
+
+
+const ADDRESS = [{
+    city: 'CBE',
+    state: 'TN',
+    id: 1 //linking field
+},
+{
+    city: 'CHN',
+    state: 'TN',
+    id: 1 //linking field
+},
+{
+    city: 'BNG',
+    state: 'KA',
+    id: 2
+},
+{
+    city: 'CHN',
+    state: 'TN',
+    id: 2
+},
+{
+    city: 'HYD',
+    state: 'TS',
+    id: 3
+},
+{
+    city: 'CBE',
+    state: 'TN',
+    id: 3
+}
+]
+
+//Define Resolver
+const resolvers = {
+    //Query
+    Query: {
+        users() {
+            return USERS
+        },
+        user(_,args) {
+            return USERS.find(user => {
+                return user.id === +args.id
+            })
+        }
+
+    },
+    //Resolver Chain
+    User: {
+        address(parent, args, contextValue, info) {
+            return ADDRESS.filter(address => {
+                return address.id === parent.id
+            })
+        }
+    }
+}
+
+const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+})
+//start the webserver and deploy
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+
+Request:
+query getUserById($userId: ID!) {
+  user(id: $userId) {
+    id
+    name
+    address {
+      city
+      state
+    }
+  }
+}
+Variable:
+{
+  "userId": "2"
+}
+Response:
+{
+  "data": {
+    "user": {
+      "id": "2",
+      "name": "B",
+      "address": [
+        {
+          "city": "BNG",
+          "state": "KA"
+        },
+        {
+          "city": "CHN",
+          "state": "TN"
+        }
+      ]
+    }
+  }
+}
+
+
 Code Challange:
 
  Customer
@@ -2300,10 +2624,140 @@ Response:
     orders: [{id:1,value:12}]
    }
  ]
+....................................................................................
+				Mutations
+.....................................................................................
 
+How to send data for insert,update,remove.
 
+type Mutation {
+  //add apis
+}
 
+src/index.ts
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from "@apollo/server/standalone"
 
+//Define Schema
+const typeDefs = `
+
+type User {
+ id:ID!
+ name:String
+ email:String
+}
+
+type Query {
+  users:[User]
+  user(id:ID!):User
+}
+
+input UserInput{
+    id:ID!
+    name:String
+    email:String
+}
+
+type AddUserMutationResponse {
+    code:String!
+    success:Boolean!
+    message:String!
+}
+
+type Mutation {
+   createUser(userInput:UserInput):AddUserMutationResponse
+}
+`
+
+const USERS = [{
+    id: 1,
+    name: 'A',
+    email: 'a@gmail.com'
+},
+{
+    id: 2,
+    name: 'B',
+    email: 'b@gmail.com'
+},
+{
+    id: 3,
+    name: 'C',
+    email: 'c@gmail.com'
+}
+
+]
+//Define Resolver
+const resolvers = {
+    //Query
+    Query: {
+        users() {
+            return USERS
+        },
+        user(_, args) {
+            return USERS.find(user => user.id === +args.id)
+        }
+    },
+    //Mutation
+    Mutation: {
+        //add new User
+        createUser(_, args) {
+            //call api to insert users
+            USERS.push(args.userInput)
+            console.log(args.userInput)
+            return {
+                code: '200',
+                success: true,
+                message: 'New User added!'
+            }
+        }
+    }
+
+}
+
+const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+})
+//start the webserver and deploy
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+
+Request:
+........
+mutation ($userInput:UserInput) {
+    createUser(userInput: $userInput) {
+      code
+      message
+      success
+    }
+}
+
+Variable:
+{
+  "userInput": {
+    "id": "100",
+    "name": "Foo",
+    "email":"foo@gmail.com"
+  }
+}
+Response:
+{
+  "data": {
+    "createUser": {
+      "code": "200",
+      "message": "New User added!",
+      "success": true
+    }
+  }
+}
+
+Coding Challange:
+ You have to update User info
+ You have to remove User Info
 
 
 

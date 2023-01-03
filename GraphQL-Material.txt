@@ -2828,7 +2828,8 @@ const CANDIES = [
     {
         "id": "gummy-bears",
         "name": "Haribo Gummy Bears",
-        "price": 100.89
+        "price": 100.89,
+       
     },
     {
         "id": "sour-patch",
@@ -2900,7 +2901,84 @@ type Query {
   myQuery:InterfaceType
 }
 
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from "@apollo/server/standalone"
 
+//Define Schema
+const typeDefs = `
+interface Book {
+    title: String!
+    author: Author!
+}
+  
+type Course {
+    name:String
+}
+type Author {
+    name:String
+}
+type Textbook implements Book {
+    title: String!
+    author: Author!
+    courses: [Course!]!
+}
+type ColoringBook implements Book {
+    title: String!
+    author: Author!
+    colors: [String!]!
+}
+  
+type Query {
+  books: [Book!]!
+}
+ `
+
+// const BOOKS = [{
+//     title: 'Graphql',
+//     courses: [{
+//         name: 'IT'
+//     }]
+// }]
+const BOOKS = [{
+    title: 'Graphql',
+    colors:['Green'] 
+}]
+//Define Resolver
+const resolvers = {
+
+    //Query
+    Query: {
+        books() {
+            return BOOKS;
+        }
+    },
+    Book: {
+        __resolveType(book, contextValue, info) {
+            console.log(book)
+            if (book.courses) {
+                return 'Textbook' //must return Implementaton type in String
+            }
+            if (book.colors) {
+                return 'ColoringBook'
+            }
+            return null
+        }
+    }
+
+
+}
+
+const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+})
+//start the webserver and deploy
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
 
 
 query getBooks {
@@ -3136,15 +3214,190 @@ Add all the code inside Datasource class
 =>removeBook
 =>UpdateBook
 =>findBookById
+...................................................................................
+			Data sources-Fetching Data From Rest
+...................................................................................
+
+Steps:
+in order to connect with rest api... i am going to expose local rest api
+
+1.Setup local rest api
+
+npm install -g json-server
+
+2.create db.json file in the project root dir
+{
+    "posts": [
+        {
+            "id": 1,
+            "title": "json-server",
+            "author": "typicode"
+        }
+    ],
+    "comments": [
+        {
+            "id": 1,
+            "body": "some comment",
+            "postId": 1
+        }
+    ],
+    "profile": {
+        "name": "typicode"
+    },
+    "books": [
+        {
+            "title": "Harry Potter and the Chamber of Secrets",
+            "author": "J.K. Rowling"
+        },
+        {
+            "title": "Jurassic Park",
+            "author": "Michael Crichton"
+        },
+        {
+            "title": "Title - index 2",
+            "author": "Author - index 2"
+        },
+        {
+            "title": "Title - index 3",
+            "author": "Author - index 3"
+        },
+        {
+            "title": "Title - index 4",
+            "author": "Author - index 4"
+        },
+        {
+            "title": "Title - index 5",
+            "author": "Author - index 5"
+        }
+    ]
+}
+
+3.Run Rest api server
+json-server --watch db.json
+
+Test:
+http://localhost:3000/books
+.....................................................................................
+				
+GraphQL setup:
+.............
+Steps:
+1.Create Service/API class in order to communicate Rest api
+ Apollo provides a special wrapper class to connect with rest apis
+
+npm install @apollo/datasource-rest --save
+
+2.Create Your own Rest api class and sub class of RESTDataSource
+
+import { RESTDataSource } from "@apollo/datasource-rest"
+
+//type class 
+export class Book {
+    title: string;
+    author: string;
+}
+
+//Rest Data Source
+export class BooksAPI extends RESTDataSource {
+    constructor() {
+        super()
+        this.baseURL = "http://localhost:3000/"
+    }
+    //apis:biz api
+    async getBooks() {
+        //http://localhost:3000/books
+        return this.get<Book[]>(`books`)
+    }
+    //save book
+    async postBook(book) {
+        return this.post<any>(`books`, book).then(resp => resp.data)
+    }
+}
+
+3.Create Context Type and inject into server
+
+//Context Type:
+interface ContextValue {
+    dataSources: {
+        booksAPI: BooksAPI
+    }
+}
+const server = new ApolloServer<ContextValue>({
+    typeDefs,
+    resolvers,
+})
+//start the webserver and deploy
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    },
+    context: async () => {
+        return {
+            dataSources: {
+                booksAPI: new BooksAPI()  // dataSources.booksAPI.getBooks()
+            }
+        }
+    }
+})
+
+4.Schema : To fetch data
+//Define Schema
+const typeDefs = `
+type Book {
+    title:String
+    author:String
+}
+
+type Query {
+    "GET all Books from the Rest api server"
+    books:[Book!]
+}
+
+`
+5.Resolver:
+//Define Resolver
+const resolvers = {
+    //Query
+    Query: {
+        async books(parent, args, contextValue, info) {
+            const { dataSources } = contextValue
+            return dataSources.booksAPI.getBooks()
+        }
+    }
+}
+
+6.Test Server:
 
 
-
-
-
-
-
-
-
-
+query {
+  books {
+    title
+  }
+}
+Response:
+{
+  "data": {
+    "books": [
+      {
+        "title": "Harry Potter and the Chamber of Secrets"
+      },
+      {
+        "title": "Jurassic Park"
+      },
+      {
+        "title": "Title - index 2"
+      },
+      {
+        "title": "Title - index 3"
+      },
+      {
+        "title": "Title - index 4"
+      },
+      {
+        "title": "Title - index 5"
+      }
+    ]
+  }
+}
 
    

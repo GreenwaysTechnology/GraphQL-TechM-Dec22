@@ -1,0 +1,14 @@
+type Query {
+    books:[Book]
+    hello:Message
+}
+type Message {
+    msg:String
+}
+type Mutation {
+    addBook(title:String,author:String):Book 
+}
+type Book {
+    title:String
+    author:String 
+}

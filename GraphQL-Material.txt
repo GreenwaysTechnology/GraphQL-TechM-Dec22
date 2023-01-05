@@ -3399,5 +3399,277 @@ Response:
     ]
   }
 }
-
+................................................................................
    
+Post and Update 
+...............
+
+import { RESTDataSource } from "@apollo/datasource-rest"
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from "@apollo/server/standalone"
+
+
+//type class 
+export class Book {
+    id?: number;
+    title?: string;
+    author?: string;
+}
+
+export class MutationResponse {
+    status: string
+    data?: Book
+}
+
+//Rest Data Source
+export class BooksAPI extends RESTDataSource {
+    constructor() {
+        super()
+        this.baseURL = "http://localhost:3000/"
+    }
+    //apis:biz api
+    async getBooks() {
+        //http://localhost:3000/books
+        return this.get<Book[]>(`books`)
+    }
+    async book(id: number) {
+        return this.get<Book>(`books/${id}`)
+    }
+    //save book
+    async postBook(book: Book) {
+        return this.post<Book>(`books`, { body: book }).then(resp => resp)
+    }
+    async updateBook(bookId: number, book: Book) {
+        return this.put<Book>(`books/${bookId}`, { body: book }).then(resp => resp)
+    }
+}
+
+//Context Type:
+interface ContextValue {
+    dataSources: {
+        booksAPI: BooksAPI
+    }
+}
+
+
+//Define Schema
+const typeDefs = `
+type Book {
+    id:Int
+    title:String
+    author:String
+}
+
+#Query
+type Query {
+    "GET all Books from the Rest api server"
+    books:[Book!]
+    book(id:Int!):Book
+}
+
+
+#Mutations
+
+input BookInput{
+    id:Int
+    title:String!
+    author:String!
+}
+
+type Mutation {
+    "POST new Book to the REST API server"
+    addBook(input:BookInput):Book
+    updateBook(id:ID!,input:BookInput):Book
+}
+
+`
+//Define Resolver
+const resolvers = {
+    //Query
+    Query: {
+        async books(parent, args, contextValue, info) {
+            const { dataSources } = contextValue
+            return dataSources.booksAPI.getBooks()
+        },
+        //Book By Id 
+        async book(parent, args, contextValue, info) {
+            const { dataSources } = contextValue
+            const id = +args.id
+            return dataSources.booksAPI.book(id)
+        }
+
+    },
+    Mutation: {
+        //create Book
+        async addBook(parent, args, contextValue, info) {
+            const { input } = args
+            return contextValue.dataSources.booksAPI.postBook(input)
+        },
+        // //update Book
+        async updateBook(parent, args, contextValue, info) {
+            const { id, input } = args
+            return contextValue.dataSources.booksAPI.updateBook(id, input)
+        },
+        // //remove Book
+        // async removeBook(parent, args, contextValue, info) {
+
+        // }
+    }
+}
+
+const server = new ApolloServer<ContextValue>({
+    typeDefs,
+    resolvers,
+})
+//start the webserver and deploy
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    },
+    context: async () => {
+        return {
+            dataSources: {
+                booksAPI: new BooksAPI()  // dataSources.booksAPI.getBooks()
+            }
+        }
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+
+....
+
+mutation($updateBookId: ID!, $input: BookInput)  {
+    updateBook(id: $updateBookId, input: $input) {
+        title
+        author
+    }
+}
+....................................................................................
+		Generating Type definitions from the schema 
+	How to isloate the schema defintions from the source code
+
+
+Steps : 
+Create basic project 
+
+>mkdir apollo-codegen
+
+>cd  apollo-codegen
+apollo-codegen>npm init --yes
+apollo-codegen>code .
+apollo-codegen>mkdir src
+
+install dependencies:
+ npm i @apollo/server graphql 
+
+Type script dependencies:
+ npm i --save-dev typescript @types/node
+
+
+tsconfig.json
+
+
+Steps:
+
+1.create schema definition
+
+schema is plain text file/string , so we can write in a separate file...
+
+filename should be schema.graphql
+
+apollo-codegen
+  |
+  src
+  package.json
+  tsconfig.json
+  schema.graphql
+
+
+schema.graphql
+
+type Query {
+    books:[Book]
+}
+type Mutation {
+    addBook(title:String,author:String):Book 
+}
+type Book {
+    title:String
+    author:String 
+}
+
+
+2.Read schema file inside code(ts)
+
+import { readFileSync } from "fs";
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from "@apollo/server/standalone"
+
+const typeDefs = readFileSync("./schema.graphql", { encoding: 'utf-8' })
+
+const server = new ApolloServer({
+    typeDefs
+})
+//start the webserver and deploy
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+..........................................................................
+			  Code Generation
+
+Generating type definitions for resolvers, models,context.....
+
+Apllo recommends to use official third party plugins
+
+@graphql-codegen/cli
+@graphql-codegen/typescript
+@graphql-codegen/typescript-resolvers
+
+npm install -D @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/typescript-resolvers
+
+
+create codegen.yml
+
+graphql-codegen
+ codegen.yml
+
+# This configuration file tells GraphQL Code Generator how to generate types based on our schema.
+schema: './schema.graphql'
+generates:
+  # Specify where our generated types should live.
+  ./src/__generated__/resolvers-types.ts:
+    plugins:
+      - 'typescript'
+      - 'typescript-resolvers'
+    config:
+      useIndexSignature: true
+      # Providing our context's interface ensures our context's type is set for
+      # all of our resolvers.
+      # This file path starts from the location of the file where you generate
+      # types (i.e., `/src/__generated__/resolvers-types.ts` above)
+      contextType: '../index#MyContext'
+
+
+Ready To Generate Code.
+
+package.json
+  "scripts": {
+    "generate": "graphql-codegen --config codegen.yml",
+    "compile": "npm run generate && tsc",
+    "postinstall": "npm run compile",
+    "start": "npm run compile && node ./dist/index.js",
+    "watch": "concurrently  --names \"CodeGen,TS,Nodemon\" -c \"bgYellow,bgBlue,bgMagenta\" \"graphql-codegen --watch 'src/**/*.ts'\"  \"tsc -w \" \"nodemon ./dist/index.js \""
+  }
+
+.....................................................................................
+
+Final code
+  -Refere Code base
+
+
+
+
+

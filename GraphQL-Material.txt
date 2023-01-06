@@ -3667,9 +3667,263 @@ package.json
 .....................................................................................
 
 Final code
-  -Refere Code base
+  -Refer Code base
+
+....................................................................................
+			Data base interaction
+....................................................................................
+
+Steps:
+1.we need to create project 
+2.we have to setup orm framework -Prisma with PostgreSQL
+3.How to migrat the database with Prisma
+4.Define the Graphql schema
+5.Define the Resolvers
+
+Project dependencies:
+ npm i @apollo/server graphql
+ npm i --save-dev typescript @types/node
+ npm install prisma typescript ts-node @types/node --save-dev
+ 
+tsconfig.json
 
 
+Database setup
+docker-compose.yml
+version: '3.8'
+services:
+  postgres:
+    image: postgres:13
+    restart: always
+    environment:
+      - POSTGRES_USER=db_user
+      - POSTGRES_PASSWORD=db_password
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+volumes:
+  postgres:
+
+>doc
+..................................................................................
+
+Prisma Setup:
+
+Steps
 
 
+1.create prisma schema file
+npx prisma init
+
+✔ Your Prisma schema was created at prisma/schema.prisma
+  You can now open it in your favorite editor.
+
+Next steps:
+1. Set the DATABASE_URL in the .env file to point to your existing database. If your database has no tables yet, read https://pris.ly/d/getting-started
+2. Set the provider of the datasource block in schema.prisma to match your database: postgresql, mysql, sqlite, sqlserver, mongodb or cockroachdb.
+3. Run prisma db pull to turn your database schema into a Prisma schema.
+4. Run prisma generate to generate the Prisma Client. You can then start querying your database.
+
+More information in our documentation:
+https://pris.ly/d/getting-started
+
+It is typically called schema.prisma and consists of the following parts:
+
+Data sources: Specify the details of the data sources Prisma should connect to (e.g. a PostgreSQL database)
+Generators: Specifies what clients should be generated based on the data model (e.g. Prisma Client)
+Data model definition: Specifies your application models (the shape of the data per data source) and their relations
+
+.env file
+DATABASE_URL="postgresql://db_user:db_password@localhost:5432/mydb?schema=public"
+
+
+Create and Migrating the database with Prisma:
+...............................................
+schema.prisma
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+model User {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  email     String   @unique
+  name      String?
+}
+
+>npx prisma migrate dev
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "mydb", schema "public" at "localhost:5432"
+
+PostgreSQL database mydb created at localhost:5432
+
+√ Enter a name for the new migration: ...
+Applying migration `20230106130528_`
+
+The following migration(s) have been created and applied from new schema changes:
+
+migrations/
+  └─ 20230106130528_/
+    └─ migration.sql
+
+Your database is now in sync with your schema.
+
+Running generate... (Use --skip-generate to skip the generators)
+
+added 2 packages, and audited 145 packages in 7s
+
+8 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+
+✔ Generated Prisma Client (4.8.1 | library) to .\node_modules\@prisma\client in 57ms
+
+
+prisma
+  | 
+ migration
+    |
+   232323232323_init
+	|
+        migration.sql
+-- CreateTable
+
+CREATE TABLE "User" (
+    "id" SERIAL NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "email" TEXT NOT NULL,
+    "name" TEXT,
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+  
+..................................................................................
+
+Setup prisma client lib:
+.........................
+
+npm i @prisma/client 
+
+src/database.ts
+
+import { PrismaClient } from "@prisma/client";
+
+export const prisma = new PrismaClient();
+  
+Setup graphql Schema file
+
+type User {
+    id:Int 
+    createdAt:String
+    email:String 
+    name:String
+}
+type Query {
+    users:[User]
+}
+input UserInput {
+    email:String
+    name:String 
+}
+type Mutation {
+    createUser(user:UserInput):User 
+}
+
+src/index.ts
+import { readFileSync } from "fs";
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from "@apollo/server/standalone"
+import { prisma } from "./database.js";
+import { PrismaClient } from "@prisma/client";
+
+const typeDefs = readFileSync("./schema.graphql", { encoding: 'utf-8' })
+
+interface MyContext {
+    dataSources: {
+        db: PrismaClient
+    }
+}
+
+//Resolvers
+const resolvers = {
+    Query: {
+        async users(parent, args, contextValue, info) {
+            return await contextValue.dataSources.db.user.findMany({})
+        }
+    },
+    Mutation: {
+        async createUser(parent, args, contextValue, info) {
+            const { user } = args
+            return await contextValue.dataSources.db.user.create({
+                data: {
+                    createdAt: new Date(),
+                    email: user.email || 'dummy@testmail.com',
+                    name: user.name || 'dummyUser'
+                }
+            })
+           
+        }
+    }
+}
+
+const server = new ApolloServer<MyContext>({
+    typeDefs,
+    resolvers
+})
+
+//start the webserver and deploy
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    },
+    context: async () => {
+        return {
+            dataSources: {
+                db: prisma
+            }
+        }
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+
+Testing:
+
+Insert row:
+mutation($user: UserInput) {
+   createUser(user: $user) {
+      name
+   }
+}
+
+
+query {
+   users {
+     id
+     name
+     email
+   }
+}
+
+Code Challange
+
+1.Remove Users based on id
+2.Update User info like email by id
+3.Get user by Id
+4.Add CodeGen setup
+........................*......................................................
 

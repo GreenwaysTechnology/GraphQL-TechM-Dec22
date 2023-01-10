@@ -3925,5 +3925,988 @@ Code Challange
 2.Update User info like email by id
 3.Get user by Id
 4.Add CodeGen setup
+5.Add Data source class
 ........................*......................................................
+
+With Service Class
+import { readFileSync } from "fs";
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from "@apollo/server/standalone"
+import { prisma } from "./database.js";
+import { PrismaClient } from "@prisma/client";
+
+const typeDefs = readFileSync("./schema.graphql", { encoding: 'utf-8' })
+
+interface MyContext {
+    dataSources: {
+        usersAPI: UserService
+    }
+}
+//todo: Add DataSource Class : UserService
+
+class UserService {
+    constructor(private db: PrismaClient) { }
+    async findUsers() {
+        return await this.db.user.findMany()
+    }
+    async createUser({ email, name }) {
+        return await this.db.user.create({
+            data: {
+                createdAt: new Date(),
+                email: email || 'dummy@testmail.com',
+                name: name || 'dummyUser'
+            }
+        })
+    }
+    async findUserByID(id: number) {
+        return await this.db.user.findUnique({
+            where: {
+                id: id,
+            },
+        })
+    }
+}
+
+//Resolvers
+const resolvers = {
+    Query: {
+        async users(_, __, { dataSources: { usersAPI } }, info) {
+            return await usersAPI.findUsers()
+        },
+        async user(_, { id }, { dataSources: { usersAPI } }, info) {
+            return await usersAPI.findUserByID(+id)
+        }
+    },
+    Mutation: {
+        async createUser(_, args, { dataSources: { usersAPI } }, info) {
+            const { user } = args
+            return await usersAPI.createUser(user)
+        }
+    }
+}
+
+const server = new ApolloServer<MyContext>({
+    typeDefs,
+    resolvers
+})
+
+//start the webserver and deploy
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    },
+    context: async () => {
+        return {
+            dataSources: {
+                usersAPI: new UserService(prisma)
+            }
+        }
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+
+query ($userId: Int) {
+  user(id: $userId) {
+    id
+    createdAt
+    name
+    email
+  }
+}
+{
+  "user": {
+    "email":"test@hotmail.com",
+    "name":"test"
+  }
+}
+
+mutation($user: UserInput) {
+   createUser(user: $user) {
+      name
+   }
+}
+....................................................................................
+				 Custom Scalar
+...................................................................................
+The GraphQl spec includes many built in scalar types such as ID,String,Int,Float,Boolean.
+Apart from you can create your own custom Type aswell.
+
+Define Custom scalar:
+
+inside schema
+
+scalar TypeName
+scallar Date
+
+
+Basic Example introduction custom Data Type:
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from "@apollo/server/standalone"
+
+//Define Schema
+const typeDefs = `
+#Custom Data type
+scalar Date
+
+type User {
+    id:ID!
+    name:String
+    email:String
+    date:Date
+}
+
+type Query {
+  users:[User]
+}
+
+`
+
+const USERS = [{
+    id: 1,
+    name: 'A',
+    email: 'a@gmail.com',
+    date: new Date()
+},
+{
+    id: 2,
+    name: 'A1',
+    email: 'a1@gmail.com',
+    date: new Date()
+}
+]
+//Define Resolver
+const resolvers = {
+    //Query
+    Query: {
+        users() {
+            return USERS
+        }
+    }
+
+}
+
+const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+})
+//start the webserver and deploy
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+
+How to resolve/give meaning to the data type?
+
+Step 1 : call GraphQLScalarType constructor function which returns object
+
+const dateScalar = new GraphQLScalarType({
+    name: 'Date',
+    description:'Date Data type',
+    
+})
+
+Step 2 : Add methods
+serialize:
+  a function which converts the custom scalar type to value that can be seralized as a response by the Graphql server
+parseValue:
+ A Function that converts the a value received as a variable in the graphql query to the the custom scalar type
+
+parseLiteral:
+ A function that converts a literal received in GraphQL query to the custom scalar type.
+
+
+const dateScalar = new GraphQLScalarType({
+    name: 'Date',
+    description: 'Date Data type',
+    serialize(value: Date) {
+        //logic how to treate that data type
+        return value.getTime() // convert outgoing date to the interger for JSON processing
+    },
+    parseValue(value: Date) {
+        return new Date(value) //convert incoming integer to Date
+    },
+    parseLiteral(ast) {
+        if (ast.kind === Kind.INT) {
+            return new Date(parseInt(ast.value, 10))
+        }
+        return null
+    }
+
+
+})
+
+Step 3: configure inside resolver
+//Define Resolver
+const resolvers = {
+    Date: dateScalar,
+    //Query
+    Query: {
+        users() {
+            return USERS
+        }
+    }
+
+}
+............
+
+Full Code:
+index.ts
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from "@apollo/server/standalone"
+import { GraphQLScalarType, Kind } from "graphql"
+
+const dateScalar = new GraphQLScalarType({
+    name: 'Date',
+    description: 'Date Data type',
+    serialize(value: Date) {
+        //logic how to treate that data type
+        return value.getTime() // convert outgoing date to the interger for JSON processing
+    },
+    parseValue(value: Date) {
+        return new Date(value) //convert incoming integer to Date
+    },
+    parseLiteral(ast) {
+        if (ast.kind === Kind.INT) {
+            return new Date(parseInt(ast.value, 10))
+        }
+        return null
+    }
+
+
+})
+
+
+//Define Schema
+const typeDefs = `
+#Custom Data type
+scalar Date
+
+type User {
+    id:ID!
+    name:String
+    email:String
+    date:Date
+}
+
+type Query {
+  users:[User]
+}
+
+`
+
+const USERS = [{
+    id: 1,
+    name: 'A',
+    email: 'a@gmail.com',
+    date: new Date()
+},
+{
+    id: 2,
+    name: 'A1',
+    email: 'a1@gmail.com',
+    date: new Date()
+}
+]
+//Define Resolver
+const resolvers = {
+    Date: dateScalar,
+    //Query
+    Query: {
+        users() {
+            return USERS
+        }
+    }
+
+}
+
+const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+})
+//start the webserver and deploy
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+....................................................................................
+			 Directives
+.....................................................................................
+
+
+What is directive?
+  A directive  is a code or logic to be injected to the schema.
+  A directive decorates part of a GraphQL schema or operation with additional   configuration which is similar to "Annotations in java".
+
+Directives are looks like below
+
+type MyType {
+   field: String @dirctive(params:Paramvalue)
+
+Graphql offers lot of built in directives, apart from we can build our own directive as well - custom directives
+
+How to create Custom Directives?
+
+ Apollo Server does not provide built in support for custom directives that transform schema.
+
+@graphql/tools package offers features to create and integrate custom directives.
+
+Apollo 4 offers graphql tool basic features as part of core lib, if you need custom directive features that tool must be installed
+
+npm install @graphql-tools/schema @graphql-tools/utils
+
+
+code:
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from "@apollo/server/standalone"
+import { GraphQLScalarType, Kind } from "graphql"
+import { mapSchema, getDirective, MapperKind } from '@graphql-tools/utils'
+import { GraphQLSchema, defaultFieldResolver } from 'graphql'
+import { makeExecutableSchema } from "@graphql-tools/schema"
+
+
+
+
+const dateScalar = new GraphQLScalarType({
+    name: 'Date',
+    description: 'Date Data type',
+    serialize(value: Date) {
+        //logic how to treate that data type
+        return value.getTime() // convert outgoing date to the interger for JSON processing
+    },
+    parseValue(value: Date) {
+        return new Date(value) //convert incoming integer to Date
+    },
+    parseLiteral(ast) {
+        if (ast.kind === Kind.INT) {
+            return new Date(parseInt(ast.value, 10))
+        }
+        return null
+    }
+
+
+})
+
+
+//Define Schema
+const typeDefs = `
+#Custom Data type Declaration
+scalar Date
+
+type User {
+    id:ID!
+    name:String @upper
+    email:String
+    date:Date
+}
+#Directive Declration
+directive @upper on FIELD_DEFINITION
+type Query {
+  users:[User]
+}
+
+`
+
+const USERS = [{
+    id: 1,
+    name: 'subramanian',
+    email: 'subu@gmail.com',
+    date: new Date()
+},
+{
+    id: 2,
+    name: 'murugan',
+    email: 'murugan@gmail.com',
+    date: new Date()
+}
+]
+//Define Resolver
+const resolvers = {
+    Date: dateScalar,
+    //Query
+    Query: {
+        users() {
+            return USERS
+        }
+    }
+
+}
+//directive logic
+function upperDirectiveTransformer(schema, directiveName) {
+    return mapSchema(schema, {
+        // Executes once for each object field in the schema
+        [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
+            // Check whether this field has the specified directive
+            const upperDirective = getDirective(schema, fieldConfig, directiveName)?.[0];
+
+            if (upperDirective) {
+                // Get this field's original resolver
+                const { resolve = defaultFieldResolver } = fieldConfig;
+
+                // Replace the original resolver with a function that *first* calls
+                // the original resolver, then converts its result to upper case
+                fieldConfig.resolve = async function (source, args, context, info) {
+                    const result = await resolve(source, args, context, info);
+                    if (typeof result === 'string') {
+                        //logic
+                        return result.toUpperCase();
+                    }
+                    return result;
+                };
+                return fieldConfig;
+            }
+        },
+    });
+}
+
+//create schema
+let schema = makeExecutableSchema({
+    typeDefs,
+    resolvers
+})
+//Attach directive to the schema
+schema = upperDirectiveTransformer(schema, 'upper')
+
+const server = new ApolloServer({
+    schema
+})
+//start the webserver and deploy
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+..................................................................................
+			   Subscriptions
+...................................................................................
+
+Reactive Programming:
+ =>way of sending and receiving data in async way with "Streaming".
+
+Streaming:
+   Data in flow... /  Data flow
+
+Reactive Programming :
+ =>data is not send in one short, rather data sent by data/one by one
+ =>you can process on going(streaming) data like transformation,filter,merging..
+ =>Better error handling, retry....
+
+Subscriptions similar to reactive stream.. if you want to stream data in graphql Subscriptions can be used.
+
+How to implement Subscriptions in Apollo Server?
+
+ Apollo Server does not provide direct implementation on subscription, we have to enable through different dependency....
+ 
+ Apollo federation do not support subscriptions....
+
+Apollo version 4 supports graphql-ws(websocket) lib support for subscriptions.
+
+
+npm i graphql-ws ws @graphql-tools/schema
+
+Steps:
+
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import express from 'express';
+import { createServer } from 'http';
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import { WebSocketServer } from 'ws';
+import { useServer } from 'graphql-ws/lib/use/ws';
+import { PubSub } from 'graphql-subscriptions';
+import bodyParser from 'body-parser';
+import cors from 'cors';
+
+const PORT = 4000;
+const pubsub = new PubSub();
+
+// Schema definition
+const typeDefs = `#graphql
+  type Query {
+    currentNumber: Int
+  }
+
+  type Subscription {
+    numberIncremented: Int
+  }
+`;
+
+// Resolver map
+const resolvers = {
+  Query: {
+    currentNumber() {
+      return currentNumber;
+    },
+  },
+  Subscription: {
+    numberIncremented: {
+      subscribe: () => pubsub.asyncIterator(['NUMBER_INCREMENTED']),
+    },
+  },
+};
+
+// Create schema, which will be used separately by ApolloServer and
+// the WebSocket server.
+const schema = makeExecutableSchema({ typeDefs, resolvers });
+
+// Create an Express app and HTTP server; we will attach the WebSocket
+// server and the ApolloServer to this HTTP server.
+const app = express();
+const httpServer = createServer(app);
+
+// Set up WebSocket server.
+const wsServer = new WebSocketServer({
+  server: httpServer,
+  path: '/graphql',
+});
+const serverCleanup = useServer({ schema }, wsServer);
+
+// Set up ApolloServer.
+const server = new ApolloServer({
+  schema,
+  plugins: [
+    // Proper shutdown for the HTTP server.
+    ApolloServerPluginDrainHttpServer({ httpServer }),
+
+    // Proper shutdown for the WebSocket server.
+    {
+      async serverWillStart() {
+        return {
+          async drainServer() {
+            await serverCleanup.dispose();
+          },
+        };
+      },
+    },
+  ],
+});
+
+await server.start();
+app.use('/graphql', cors<cors.CorsRequest>(), bodyParser.json(), expressMiddleware(server));
+
+// Now that our HTTP server is fully set up, actually listen.
+httpServer.listen(PORT, () => {
+  console.log(`🚀 Query endpoint ready at http://localhost:${PORT}/graphql`);
+  console.log(`🚀 Subscription endpoint ready at ws://localhost:${PORT}/graphql`);
+});
+
+// In the background, increment a number every second and notify subscribers when it changes.
+let currentNumber = 0;
+function incrementNumber() {
+  currentNumber++;
+  pubsub.publish('NUMBER_INCREMENTED', { numberIncremented: currentNumber });
+  setTimeout(incrementNumber, 1000);
+}
+
+// Start incrementing
+incrementNumber();
+..................................................................................
+		    Microservice based design - Federation
+.................................................................................
+
+Apollo Federation is a way of combining multiple GraphQL servers into a single, cohesive API. It allows you to build a "distributed GraphQL schema" by stitching together multiple smaller GraphQL services. 
+
+This can be useful in a variety of situations, such as when you have multiple teams working on different parts of a larger application, or when you have multiple microservices that you want to expose through a single GraphQL API.
+
+To use Apollo Federation, you define a shared GraphQL schema that describes the capabilities of all of the underlying GraphQL servers. This shared schema is called the "federated schema," and it acts as a gateway to the underlying GraphQL servers.
+
+
+Clients can then make queries and mutations against the federated schema, which are automatically routed to the appropriate underlying GraphQL server based on the schema definition. This allows clients to access all of the data and functionality provided by the different GraphQL servers through a single, unified API.
+
+Overall, Apollo Federation can help you build more scalable and maintainable GraphQL architectures by allowing you to combine multiple GraphQL servers into a single API.
+
+Core Concepts in Federation:
+.............................
+
+subgraph and super graph:
+.........................
+
+subgraph : Indivual graphql application is called subgraph
+
+Application - Product
+
+-------------------
+schema.graphql
+  type Product {}
+  type Customer {}
+  type Order {}
+
+Resolvers
+
+Data Stores
+---------------------
+
+
+Application - Users
+
+-------------------
+schema.graphql
+  type User {}
+
+Resolvers
+
+Data Stores
+---------------------
+
+Super Graph:/Federated graph
+  You built schema in smallar parts, the division of this based on domain or team.
+ You coimbine everying in a single point - Super Graph...
+
+product.graphql
+
+customer.graphql
+
+............
+
+Since separate app how do they communicate?
+
+Router:
+  A supergraph arch also includes router, which sits between clients and sub graphs.
+ The router is responsiable for accepting incoming operations from the clients and spilting them into smallar operations that can be resolved by a single graph..
+
+...................................................................................
+
+Apollo Federation:
+  => It is platform to faclilates the over all communication and scalling the sub and super graph arch...
+ => why we use this arch, separation of concerns..
+.....................................................................................
+
+Entity:
+
+  In Apollo Federation, an entity is a type that represents a domain-specific object, just like in any other GraphQL API.
+  
+The main difference is that in a federated GraphQL API, the entity types are defined in the federated schema, which acts as a gateway to the underlying GraphQL servers.
+
+//Define Schema
+ type Book {
+    title:String
+    author:String
+ }
+ type Query {
+    books:[Book]
+ }
+
+It is type that you define canonically in one implementing service  and can then reference and extend in other implementing services.
+
+Entity is core building blocks of federed  graph .
+...................................................................................
+
+			 Entity in Graphql meaning that shared schema type
+			 if schema is not sharable which is not entity.
+
+How to create entity?
+ Using @Key directive in our schema
+
+Normal schema Type
+type User{
+  id: ID!
+  name: String!
+}
+
+Entity:
+type User @key(fields: "id") {
+  id: ID!
+  name: String!
+}
+In this example, the User type is an entity type that represents a user in the system. The @key directive specifies the field or fields that uniquely identify a user (in this case, the id field).
+
+When a client makes a query or mutation that involves the User type, the federated schema will route the request to the appropriate underlying GraphQL server based on the schema definition. The server will then handle the request and return the requested data to the client.
+
+Federated Resolver:
+  Federed entity must have "distributed Resolve"
+ __resolveReference(obj){
+
+  }
+
+const resolvers = {
+ 
+ User : {
+	__resolveReference(user){
+		return userById(user.id)
+	 }	
+
+  },
+
+  Query: { 
+    ...
+
+  }
+
+}
+
+
+...................................................................................
+				 Application Setup 
+.....................................................................................
+
+You can define single workspace or indidual apps.
+
+There are each sub graph must be separate app and single router app
+
+1.Router Application
+2.Subgraphs...
+
+Steps : 
+ SubGraph Setup
+ Router Setup...
+
+SubGraph Depedency:
+ @apollo/subgraph
+ graphql-tag
+
+
+Steps:
+ Create SubGraph Project
+
+npm i @apollo/subgraph
+npm i graphql-tag  -optional incase if the schema is written outside - 
+
+Level-0
+index.ts
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import gql from 'graphql-tag';
+
+const typeDefs = gql`
+  type Query {
+    me: User
+  }
+
+  type User {
+    id: ID!
+    username: String
+  }
+`;
+
+const resolvers = {
+  Query: {
+    me() {
+      return { id: '1', username: '@ava' };
+    },
+  },
+};
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+});
+
+// Note the top-level await!
+const { url } = await startStandaloneServer(server);
+console.log(`🚀  Server ready at ${url}`);
+
+
+output : schema:
+type Query {
+  me: User
+}
+
+type User {
+  id: ID!
+  username: String
+}
+.....................................................................................
+
+Level -1
+
+Federated schema
+...................
+
+users.ts
+
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import gql from 'graphql-tag';
+import { buildSubgraphSchema } from '@apollo/subgraph';
+
+
+const typeDefs = gql`
+  # highlight-start
+  extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@shareable"])
+  # highlight-end
+
+  type Query {
+    me: User
+  }
+
+  type User
+    @key(fields: "id") { 
+    id: ID!
+    username: String
+  }
+`;
+
+const resolvers = {
+    Query: {
+        me() {
+            return { id: '1', username: '@ava' };
+        },
+    },
+    User: {
+        __resolveReference(user, { fetchUserById }) {
+            return fetchUserById(user.id);
+        },
+    },
+};
+
+const server = new ApolloServer({
+    schema: buildSubgraphSchema({ typeDefs, resolvers }),
+});
+
+// Note the top level await!
+const { url } = await startStandaloneServer(server, {
+  listen: {
+      port: 4001
+  }
+})
+console.log(`🚀  Server ready at ${url}`);
+
+Gateway
+index.ts
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import { ApolloGateway } from '@apollo/gateway';
+import { readFileSync } from 'fs';
+
+
+const gateway = new ApolloGateway({
+    serviceList: [
+        { name: 'users', url: 'http://localhost:4001' },
+        // Define additional services here
+    ],
+});
+
+
+// Pass the ApolloGateway to the ApolloServer constructor
+
+const server = new ApolloServer({
+    gateway,
+});
+
+
+// Note the top-level `await`!
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`🚀  Server ready at ${url}`);
+
+
+Test:
+ "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compile": "tsc",
+    "start:users": "npm run compile && node ./dist/user.js",
+    "start:app": "npm run compile && node ./dist/index.js"
+
+  },
+
+npm run start:users
+
+npm run start:app
+
+http://localhost:4000/
+
+Query:
+query {
+   me {
+      id
+      username
+   }
+}
+Response:
+{
+  "data": {
+    "me": {
+      "id": "1",
+      "username": "@ava"
+    }
+  }
+}
+.................
+
+SuperGraph SDL:
+
+const gateway = new ApolloGateway({
+    serviceList: [
+        { name: 'users', url: 'http://localhost:4001' },
+        // Define additional services here
+    ],
+});
+
+//SUPER Graph schema
+const superGraphSDL = ''
+const gateway = new ApolloGateway({
+    supergraphSdl: superGraphSDL
+});
+
+How to generate superGraphSDL?
+
+
+Install the Rover CLI
+Rover is Apollo's CLI for managing all kinds of graphs, including subgraphs and supergraphs
+
+npm i @apollo/rover -g
+
+rover subgraph introspect http://localhost:4001/graphql > users.graphql
+
+
+
+create config file
+
+supergraph-config.yml
+subgraphs:
+  books:
+    routing_url: http://localhost:4001/graphql
+    schema:
+      file: ./users.graphql
+
+
+rover supergraph compose --config ./supergraph-config.yml
+
+rover supergraph compose --config ./supergraph-config.yml > supergraph.graphql
+
+
+
+
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import { ApolloGateway } from '@apollo/gateway';
+import { readFileSync } from 'fs';
+
+
+// const gateway = new ApolloGateway({
+//     serviceList: [
+//         { name: 'users', url: 'http://localhost:4001' },
+//         // Define additional services here
+//     ],
+// });
+
+//SUPER Graph schema
+const superGraphSDL = readFileSync('./supergraph.graphql', { 'encoding': 'utf8' })
+const gateway = new ApolloGateway({
+    supergraphSdl: superGraphSDL
+});
+
+// Pass the ApolloGateway to the ApolloServer constructor
+
+const server = new ApolloServer({
+    gateway,
+});
+
+
+// Note the top-level `await`!
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`🚀  Server ready at ${url}`);
+
 
